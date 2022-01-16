@@ -4,7 +4,8 @@
   "description": "Attestations to Ethereum data in circom",
   "main": "index.js",
   "scripts": {
-    "build": "./build_circuits.sh",
+      "build": "./build_circuits.sh",
+      "test": "mocha -r ts-node/register 'test/**/*.ts'"
   },
   "repository": "git@github.com:yi-sun/eth-attestor.git",
   "author": "Yi Sun <yi-sun@users.noreply.github.com>",
