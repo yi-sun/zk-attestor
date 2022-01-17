@@ -61,3 +61,40 @@ template Keccak256(nBitsIn) {
         out[i] <== squeeze.out[i];
     }
 }
+
+// Assumes the input has already been padded with 10*1 padding
+// nBitsIn must be a multiple of 1088
+template Keccak256NoPad(nBitsIn) {
+    signal input in[nBitsIn];
+    signal output out[256];
+
+    var blockSize = 136 * 8;
+    var numPadBlocks = nBitsIn \ blockSize;
+
+    component abs[numPadBlocks];
+    for (var idx = 0; idx < numPadBlocks; idx++) {
+        abs[idx] = Absorb();
+    }
+    for (var i = 0; i < 25 * 64; i++) {
+        abs[0].s[i] <== 0;
+    }
+    for (var i = 0; i < blockSize; i++) {
+        abs[0].block[i] <== in[i];
+    }
+    for (var idx = 1; idx < numPadBlocks; idx++) {
+        for (var i = 0; i < 25 * 64; i++) {
+            abs[idx].s[i] <== abs[idx - 1].out[i];
+        }
+        for (var i = 0; i < blockSize; i++) {
+            abs[idx].block[i] <== in[idx * blockSize + i];
+        }
+    }
+
+    component squeeze = Squeeze(256);
+    for (var i = 0; i < 25 * 64; i++) {
+        squeeze.s[i] <== abs[numPadBlocks - 1].out[i];
+    }
+    for (var i = 0; i < 256; i++) {
+        out[i] <== squeeze.out[i];
+    }
+}
