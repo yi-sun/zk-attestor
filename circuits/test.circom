@@ -132,28 +132,29 @@ template VarConcat2(aMin, aMax, aMaxBits, bMin, bMax, bMaxBits) {
     bVal.in[1] <== bMax;
     bVal.out === 1;
 
-    component aleqs[aMax];
+    component aleqs[aMax - aMin];
     component ableqs[aMax + bMax];
-    for (var idx = 0; idx < aMax; idx++) {
+    for (var idx = 0; idx < aMax - aMin; idx++) {
         aleqs[idx] = LessEqThan(aMaxBits);
-        aleqs[idx].in[0] <== idx + 1;
+        aleqs[idx].in[0] <== aMin + idx + 1;
         aleqs[idx].in[1] <== aLen;
     }
-    for (var idx = 0; idx < aMax + bMax; idx++) {
+    
+    for (var idx = 0; idx < aMax + bMax - aMin; idx++) {
         ableqs[idx] = LessEqThan(max(aMaxBits, bMaxBits) + 1);
-        ableqs[idx].in[0] <== idx + 1;
+        ableqs[idx].in[0] <== aMin + idx + 1;
         ableqs[idx].in[1] <== aLen + bLen;
     }
-    component bChoice[aMax + bMax];
-    for (var idx = 0; idx < aMax + bMax; idx++) {
+    component bChoice[aMax + bMax - aMin];
+    for (var idx = 0; idx < aMax + bMax - aMin; idx++) {
         bChoice[idx] = MultiplexerUnsafe(1, bMax);
         for (var j = 0; j < bMax; j++) {
             bChoice[idx].inp[j][0] <== b[j];
         }
-        bChoice[idx].sel <== idx - aLen;
+        bChoice[idx].sel <== aMin + idx - aLen;
     }
-    signal bChoiceVal[aMax + bMax];
-    for (var idx = 0; idx < aMax + bMax; idx++) {
+    signal bChoiceVal[aMax + bMax - aMin];
+    for (var idx = 0; idx < aMax + bMax - aMin; idx++) {
         bChoiceVal[idx] <== ableqs[idx].out * bChoice[idx].out[0];
     }
 
@@ -163,10 +164,10 @@ template VarConcat2(aMin, aMax, aMaxBits, bMin, bMax, bMaxBits) {
         out[idx] <== a[idx];
     }
     for (var idx = aMin; idx < aMax; idx++) {
-        out[idx] <== aleqs[idx].out * (a[idx] - bChoiceVal[idx]) + bChoiceVal[idx];
+        out[idx] <== aleqs[idx - aMin].out * (a[idx] - bChoiceVal[idx - aMin]) + bChoiceVal[idx - aMin];
     }
     for (var idx = aMax; idx < aMax + bMax; idx++) {
-        out[idx] <== bChoiceVal[idx];
+        out[idx] <== bChoiceVal[idx - aMin];
     }
 }
 
