@@ -28,21 +28,6 @@ template MultiplexerUnsafe(wIn, nIn) {
     success <== dec.success;
 }
 
-function max(a, b) {
-    if (a > b) {
-        return a;
-    }
-    return b;
-}
-
-function max3(a, b, c) {
-    return max(a, max(b, c));
-}
-
-function max4(a, b, c, d) {
-    return max(a, max(b, max(c, d)));
-}
-
 template VarConcatTest(aMax, bMax, aMaxBits, bMaxBits) {
     signal input a[aMax];
     signal input b[bMax];
@@ -217,41 +202,136 @@ template VarConcat4(aMin, aMax, aMaxBits, bMin, bMax, bMaxBits, cMin, cMax, cMax
     }
 }
 
-template Pad101(inLenMin, inLenMax, outLen, outLenBits) {
-    assert((2 ** outLenBits) >= outLen);
-    assert(inLenMax + 2 <= outLen);
-    signal input in[inLenMax];
+// selects indices [start, end)
+template SubArray(nIn, maxSelect, nInBits) {
+    signal input in[nIn];
+    signal input start;
+    signal input end;
+
+    signal output out[nIn];
+    signal output outLen;
+
+    component lt1 = LessEqThan(nInBits);
+    lt1.in[0] <== start;
+    lt1.in[1] <== end;
+    lt1.out === 1;
+    
+    component lt2 = LessEqThan(nInBits);
+    lt2.in[0] <== end;
+    lt2.in[1] <== nIn;
+    lt2.out === 1;
+
+    component lt3 = LessEqThan(nInBits);
+    lt3.in[0] <== end - start;
+    lt3.in[1] <== maxSelect;
+    lt3.out === 1;
+
+    outLen <== end - start;
+    component selectors[maxSelect];
+    for (var idx = 0; idx < maxSelect; idx++) {
+	selectors[idx] = MultiplexerUnsafe(1, nIn);
+	for (var i = 0; i < nIn; i++) {
+	    selectors[idx].inp[i][0] <== in[i];
+	}
+	selectors[idx].sel <== start + idx;
+	out[idx] <== selectors[idx].out[0];
+    }
+}
+
+template ArrayEq(nIn) {
+    signal input a[nIn];
+    signal input b[nIn];
     signal input inLen;
-    signal output out[outLen];
 
-    component inLenVal = LessEqThan(outLenBits);
-    inLenVal.in[0] <== inLen;
-    inLenVal.in[1] <== inLenMax;
-    inLenVal.out === 1;
+    signal output out;
 
-    component inLess[inLenMax - inLenMin];
-    for (var idx = 0; idx < inLenMax - inLenMin; idx++) {
-        inLess[idx] = LessThan(outLenBits);
-        inLess[idx].in[0] <== idx + inLenMin;
-        inLess[idx].in[1] <== inLen;
+    component leq = LessEqThan(252);
+    leq.in[0] <== inLen;
+    leq.in[1] <== nIn;
+    leq.out === 1;
+
+    component eq[nIn];
+    component idxLeq[nIn];
+    signal match[nIn];
+    signal ors[nIn - 1];
+    
+    for (var idx = 0; idx < nIn; idx++) {
+	eq[idx] = IsEqual();
+	eq[idx].in[0] <== a[idx];
+	eq[idx].in[1] <== b[idx];
+	idxLeq[idx] = LessEqThan(252);
+	idxLeq[idx].in[0] <== inLen;
+	idxLeq[idx].in[1] <== idx;
+
+	if (idx == 0) {
+	    match[idx] <== eq[idx].out + idxLeq[idx].out - eq[idx].out * idxLeq[idx].out;
+	} else {
+	    ors[idx - 1] <== eq[idx].out + idxLeq[idx].out - eq[idx].out * idxLeq[idx].out;
+	    match[idx] <== match[idx - 1] * ors[idx - 1];
+	}
+    }
+    out <== match[nIn - 1];
+}
+
+function min(a, b) {
+    if (a < b) {
+	return a;
+    }
+    return b;
+}
+
+template KeccakOrLiteralHex(maxInLen) {
+    signal input inLen;
+    signal input in[maxInLen];
+
+    signal output outLen;
+    signal output out[64];
+
+    var maxRounds = (maxInLen + 272) \ 272;
+    component pad = ReorderPad101Hex(0, maxInLen, maxRounds * 272, 252);
+    for (var idx = 0; idx < maxInLen; idx++) {
+	pad.in[idx] <== in[idx];
+    }
+    pad.inLen <== inLen;
+
+    signal hashRounds;
+    signal roundRem;
+    hashRounds <-- (inLen + 272) \ 272;
+    roundRem <-- inLen % 272;
+    inLen + 272 === hashRounds * 272 + roundRem;
+
+    component roundRange = LessThan(252);
+    roundRange.in[0] <== hashRounds;
+    roundRange.in[1] <== 272;
+    roundRange.out === 1;
+
+    component remRange = LessThan(252);
+    remRange.in[0] <== roundRem;
+    remRange.in[1] <== 272;
+    remRange.out === 1;
+
+    component hash = Keccak256Hex(maxRounds);
+    for (var idx = 0; idx < maxRounds * 272; idx++) {
+	hash.inPaddedHex[idx] <== pad.out[idx];
+    }
+    hash.rounds <== hashRounds;
+
+    component isShort = LessThan(252);
+    isShort.in[0] <== inLen;
+    isShort.in[1] <== 63;
+
+    signal unflippedHashHex[64];
+    for (var idx = 0; idx < 64; idx++) {
+	unflippedHashHex[idx] <== hash.out[4 * idx] + 2 * hash.out[4 * idx + 1] + 4 * hash.out[4 * idx + 2] + 8 * hash.out[4 * idx + 3];
     }
 
-    component eq[inLenMax + 1 - inLenMin];
-    for (var idx = 0; idx < inLenMax + 1 - inLenMin; idx++) {
-        eq[idx] = IsEqual();
-        eq[idx].in[0] <== idx + inLenMin;
-        eq[idx].in[1] <== inLen;
+    for (var idx = 0; idx < min(32, maxInLen \ 2); idx++) {
+	out[2 * idx] <== isShort.out * (in[2 * idx] - unflippedHashHex[2 * idx + 1]) + unflippedHashHex[2 * idx + 1];
+	out[2 * idx + 1] <== isShort.out * (in[2 * idx + 1] - unflippedHashHex[2 * idx]) + unflippedHashHex[2 * idx];
     }
-
-    for (var idx = 0; idx < inLenMin; idx++) {
-        out[idx] <== in[idx];
+    for (var idx = min(32, maxInLen \ 2); idx < 32; idx++) {
+	out[2 * idx] <== unflippedHashHex[2 * idx + 1];
+	out[2 * idx + 1] <== unflippedHashHex[2 * idx];
     }
-    for (var idx = inLenMin; idx < inLenMax; idx++) {
-        out[idx] <== inLess[idx - inLenMin].out * in[idx] + eq[idx - inLenMin].out;
-    }
-    out[inLenMax] <== eq[inLenMax - inLenMin].out;
-    for (var idx = inLenMax + 1; idx < outLen - 1; idx++) {
-        out[idx] <== 0;
-    }
-    out[outLen - 1] <== 1;    
+    outLen <== isShort.out * (inLen - 64) + 64;
 }
