@@ -94,5 +94,6 @@ component main {public [
     nodePathHexLen,    
     nodeRefHexLen,
     nodeRlpHexs,
-    nodeTypes
-]} = MPTInclusionFixedKeyHexLen(7, 64, 228);
+    nodeTypes,
+    depth
+]} = MPTInclusionFixedKeyVarDepth(6, 64, 114);
