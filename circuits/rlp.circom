@@ -6,13 +6,6 @@ include "../node_modules/circomlib/circuits/multiplexer.circom";
 
 include "./keccak.circom";
 
-function min(a, b) {
-    if (a < b) {
-	return a;
-    }
-    return b;
-}
-
 template MultiplexerUnsafe(wIn, nIn) {
     signal input inp[nIn][wIn];
     signal input sel;

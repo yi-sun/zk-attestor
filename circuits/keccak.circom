@@ -1,8 +1,19 @@
 pragma circom 2.0.2;
 
+include "../node_modules/circomlib/circuits/bitify.circom";
+include "../node_modules/circomlib/circuits/comparators.circom";
+include "../node_modules/circomlib/circuits/multiplexer.circom";
+
 include "./vocdoni-keccak/keccak.circom";
 include "./vocdoni-keccak/permutations.circom";
 include "./vocdoni-keccak/utils.circom";
+
+function min(a, b) {
+    if (a < b) {
+	return a;
+    }
+    return b;
+}
 
 template Pad0(inLenMin, inLenMax, outLen, outLenBits) {
     assert((2 ** outLenBits) >= outLen);
@@ -127,6 +138,7 @@ template Keccak256Hex(maxRounds) {
     signal input inPaddedHex[maxRounds * 272];
     signal input rounds;
 
+    // out in bits
     signal output out[256];
 
     component roundCheck = LessEqThan(252);
@@ -178,6 +190,7 @@ template KeccakOrLiteralHex(maxInLen) {
     signal input in[maxInLen];
 
     signal output outLen;
+    // out in hex
     signal output out[64];
 
     var maxRounds = (maxInLen + 272) \ 272;
@@ -209,9 +222,9 @@ template KeccakOrLiteralHex(maxInLen) {
     }
     hash.rounds <== hashRounds;
 
-    component isShort = LessThan(252);
+    component isShort = LessEqThan(252);
     isShort.in[0] <== inLen;
-    isShort.in[1] <== 63;
+    isShort.in[1] <== 62;
 
     signal unflippedHashHex[64];
     for (var idx = 0; idx < 64; idx++) {
@@ -223,8 +236,9 @@ template KeccakOrLiteralHex(maxInLen) {
 	out[2 * idx + 1] <== isShort.out * (in[2 * idx + 1] - unflippedHashHex[2 * idx]) + unflippedHashHex[2 * idx];
     }
     for (var idx = min(32, maxInLen \ 2); idx < 32; idx++) {
-	out[2 * idx] <== unflippedHashHex[2 * idx + 1];
-	out[2 * idx + 1] <== unflippedHashHex[2 * idx];
+	out[2 * idx] <== (1 - isShort.out) * unflippedHashHex[2 * idx + 1];
+	out[2 * idx + 1] <== (1 - isShort.out) * unflippedHashHex[2 * idx];
     }
+
     outLen <== isShort.out * (inLen - 64) + 64;
 }

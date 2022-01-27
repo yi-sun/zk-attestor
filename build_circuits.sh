@@ -2,7 +2,7 @@
 
 PHASE1=circuits/pot24_final.ptau
 BUILD_DIR=build
-CIRCUIT_NAME=test
+CIRCUIT_NAME=test_keccak_or_literal_hex
 
 if [ -f "$PHASE1" ]; then
     echo "Found Phase 1 ptau file"
@@ -22,12 +22,13 @@ echo "****COMPILING CIRCUIT****"
 start=`date +%s`
 #circom circuits/"$CIRCUIT_NAME".circom --wasm --output "$BUILD_DIR"
 circom circuits/"$CIRCUIT_NAME".circom --r1cs --wasm --sym --c --wat --output "$BUILD_DIR"
+#circom test/circuits/"$CIRCUIT_NAME".circom --r1cs --wasm --sym --c --wat --output "$BUILD_DIR"
 end=`date +%s`
 echo "DONE ($((end-start))s)"
 
 echo "****GENERATING WITNESS FOR SAMPLE INPUT****"
 start=`date +%s`
-node "$BUILD_DIR"/"$CIRCUIT_NAME"_js/generate_witness.js "$BUILD_DIR"/"$CIRCUIT_NAME"_js/"$CIRCUIT_NAME".wasm test/input_mpt.json "$BUILD_DIR"/witness.wtns
+node "$BUILD_DIR"/"$CIRCUIT_NAME"_js/generate_witness.js "$BUILD_DIR"/"$CIRCUIT_NAME"_js/"$CIRCUIT_NAME".wasm test/input_keccak.json "$BUILD_DIR"/witness.wtns
 end=`date +%s`
 echo "DONE ($((end-start))s)"
 
