@@ -74,7 +74,6 @@ describe("keccak256orliteralhex 550 hash", function() {
 	    hexString = hexString + input[i].toString(16);
 	}
 	let hash: any = keccak256(hexString);
-        console.log(hash);	
 	for (var i = 2; i < 66; i++) {
 	    output.push(BigInt(parseInt(hash.charAt(i), 16)));
 	}

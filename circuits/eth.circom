@@ -84,3 +84,59 @@ template EthBlockHashHex() {
         blockHash[idx] <== keccak.out[idx];
     }    
 }
+
+template EthStorageProof(depth) {
+    signal input storageRootHexs[64];
+
+    // uint256
+    signal input slotHexLen;
+    signal input slotHexs[64];
+    
+    signal input valueRlpHexLen;
+    signal input valueRlpHexs[66];
+
+    signal output out;
+}
+
+template EthAddressProof(depth) {
+    signal input stateRootHexs[64];
+
+    signal input addressHexs[40];
+    signal input addressValueRlpHexLen;
+    signal input addressValueRlpHexs[228];
+
+    signal output out;
+}
+
+template EthAddressStorageProof(addressDepth, storageDepth) {
+    signal input blockHashHexs[64];
+
+    signal input rlpPrefixHexs[6];
+    signal input parentHashRlpHexs[64 + 2];
+    signal input ommersHashRlpHexs[64 + 2];
+    signal input beneficiaryRlpHexs[40 + 2];
+    signal input stateRootRlpHexs[64 + 2];
+    signal input transactionsRootRlpHexs[64 + 2];
+    signal input receiptsRootRlpHexs[64 + 2];
+    signal input logsBloomRlpHexs[64 * 8 + 6];
+    signal input difficultyRlpHexs[16];
+    
+    signal input suffixRlpHexLen;
+    signal input suffixRlpHexs[8 + 10 + 10 + 10 + 64 + 2 + 64 + 2 + 16 + 2 + 12];
+
+    // address proof inputs
+    signal input stateRootHexs[64];
+
+    signal input addressHexs[40];
+    signal input addressValueRlpHexLen;
+    signal input addressValueRlpHexs[228];
+
+    // storage proof inputs
+    signal input slotHexLen;
+    signal input slotHexs[64];
+    
+    signal input valueRlpHexLen;
+    signal input valueRlpHexs[66];
+
+    signal output out;
+}

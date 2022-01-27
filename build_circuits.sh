@@ -2,7 +2,7 @@
 
 PHASE1=circuits/pot24_final.ptau
 BUILD_DIR=build
-CIRCUIT_NAME=test_keccak_or_literal_hex
+CIRCUIT_NAME=test
 
 if [ -f "$PHASE1" ]; then
     echo "Found Phase 1 ptau file"
@@ -28,7 +28,7 @@ echo "DONE ($((end-start))s)"
 
 echo "****GENERATING WITNESS FOR SAMPLE INPUT****"
 start=`date +%s`
-node "$BUILD_DIR"/"$CIRCUIT_NAME"_js/generate_witness.js "$BUILD_DIR"/"$CIRCUIT_NAME"_js/"$CIRCUIT_NAME".wasm test/input_keccak.json "$BUILD_DIR"/witness.wtns
+node "$BUILD_DIR"/"$CIRCUIT_NAME"_js/generate_witness.js "$BUILD_DIR"/"$CIRCUIT_NAME"_js/"$CIRCUIT_NAME".wasm test/input_branch.json "$BUILD_DIR"/witness.wtns
 end=`date +%s`
 echo "DONE ($((end-start))s)"
 
