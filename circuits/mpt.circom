@@ -71,10 +71,6 @@ template LeafFixedKeyHexLen(keyHexLen, maxValueHexLen) {
 
     signal key_path;
     key_path <== key_path_len_match.out * key_path_match.out;
-
-    log(55555);
-    log(key_path_len_match.out);
-    log(key_path_match.out);
     
     // * check value matches valueBits
     component leaf_to_value = SubArray(maxLeafRlpHexLen, maxValueHexLen, 252);
@@ -90,8 +86,6 @@ template LeafFixedKeyHexLen(keyHexLen, maxValueHexLen) {
 	leaf_value_match.b[idx] <== valueHexs[idx];
     }
     leaf_value_match.inLen <== leafValueLenHexLen;
-    log(5555);
-    log(leaf_value_match.out);
 
     out <== key_path + leaf_value_match.out;
 }
@@ -201,20 +195,6 @@ template BranchFixedKeyHexLen(maxNodeRefLen) {
 
     signal output out;
 
-    log(keyNibble);
-    log(nodeRefHexLen);
-    for(var idx = 0; idx < 5; idx++) {
-	log(nodeRefHexs[idx]);
-    }
-    log(nodeRlpLengthHexLen);
-    for (var idx = 0; idx < 16; idx++) {
-	log(nodeValueLenHexLen[idx]);
-    }
-    for (var idx = 0; idx < 5; idx++) {
-	log(nodeRlpHexs[idx]);
-    }
-    log(22222222222222222222222);
-
     // check input hexs are hexs
     component hexChecks[maxBranchRlpHexLen];
     for (var idx = 0; idx < maxBranchRlpHexLen; idx++) {
@@ -248,14 +228,6 @@ template BranchFixedKeyHexLen(maxNodeRefLen) {
     }
     branch_to_node_ref.start <== nodeStartSelector.out[0];
     branch_to_node_ref.end <== nodeStartSelector.out[0] + nodeRefLenSelector.out[0];
-
-    for (var idx = 0; idx < 5; idx++) {
-	log(branch_to_node_ref.out[idx]);
-    }
-    for (var idx = 0; idx < 5; idx++) {
-	log(nodeRefHexs[idx]);
-    }
-    log(33333333333333333333333);
     
     component node_ref_match = ArrayEq(maxNodeRefLen);
     for (var idx = 0; idx < maxNodeRefLen; idx++) {
@@ -267,9 +239,6 @@ template BranchFixedKeyHexLen(maxNodeRefLen) {
     component node_ref_len_match = IsEqual();
     node_ref_len_match.in[0] <== nodeRefHexLen;
     node_ref_len_match.in[1] <== nodeRefLenSelector.out[0];
-
-    log(node_ref_match.out);
-    log(node_ref_len_match.out);
     
     out <== node_ref_match.out + node_ref_len_match.out;     
 }
@@ -278,12 +247,10 @@ template BranchFixedKeyHexLen(maxNodeRefLen) {
 // Assumes all keys have a fixed bit length, so that branches have length 16 only
 // and all paths terminate in a leaf
 // pathNodes is an array of hashes of nodes in a path from (key, value) to root
-template MPTInclusionFixedKeyVarDepth(maxDepth, keyHexLen, maxValueHexLen) {
+template MPTInclusionFixedKeyHexLen(maxDepth, keyHexLen, maxValueHexLen) {
     var maxLeafRlpHexLen = 4 + 66 + 4 + maxValueHexLen;
     var maxBranchRlpHexLen = 1064;
     var maxExtensionRlpHexLen = 4 + 134;
-
-    log(55555555555555555);
     
     signal input keyHexs[keyHexLen];
     signal input valueHexs[maxValueHexLen];
@@ -369,8 +336,6 @@ template MPTInclusionFixedKeyVarDepth(maxDepth, keyHexLen, maxValueHexLen) {
 	rootHashCheck.b[idx] <== nodeHashes[0].out[idx];
     }
     rootHashCheck.inLen <== 64;
-    log(4444444444444);
-    log(rootHashCheck.out);
 
     // compute key fragments
     // if branch: nibble is of size 1
@@ -414,8 +379,6 @@ template MPTInclusionFixedKeyVarDepth(maxDepth, keyHexLen, maxValueHexLen) {
     for (var idx = 0; idx < maxLeafRlpHexLen; idx++) {
 	leaf.leafRlpHexs[idx] <== leafRlpHexs[idx];
     }
-    log(4444444444444);
-    log(leaf.out);
     
     // masks for depth selector
     component depthEq[maxDepth];

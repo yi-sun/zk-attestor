@@ -57,4 +57,4 @@ component main {public [
     nodeRlpHexs,
     nodeTypes,
     depth
-]} = MPTInclusionFixedKeyVarDepth(5, 64, 114);
+]} = MPTInclusionFixedKeyHexLen(5, 64, 114);

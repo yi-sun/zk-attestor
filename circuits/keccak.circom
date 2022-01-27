@@ -172,3 +172,59 @@ template Keccak256Hex(maxRounds) {
 	out[idx] <== squeeze.out[idx];
     }
 }
+
+template KeccakOrLiteralHex(maxInLen) {
+    signal input inLen;
+    signal input in[maxInLen];
+
+    signal output outLen;
+    signal output out[64];
+
+    var maxRounds = (maxInLen + 272) \ 272;
+    component pad = ReorderPad101Hex(0, maxInLen, maxRounds * 272, 252);
+    for (var idx = 0; idx < maxInLen; idx++) {
+	pad.in[idx] <== in[idx];
+    }
+    pad.inLen <== inLen;
+
+    signal hashRounds;
+    signal roundRem;
+    hashRounds <-- (inLen + 272) \ 272;
+    roundRem <-- inLen % 272;
+    inLen + 272 === hashRounds * 272 + roundRem;
+
+    component roundRange = LessThan(252);
+    roundRange.in[0] <== hashRounds;
+    roundRange.in[1] <== 272;
+    roundRange.out === 1;
+
+    component remRange = LessThan(252);
+    remRange.in[0] <== roundRem;
+    remRange.in[1] <== 272;
+    remRange.out === 1;
+
+    component hash = Keccak256Hex(maxRounds);
+    for (var idx = 0; idx < maxRounds * 272; idx++) {
+	hash.inPaddedHex[idx] <== pad.out[idx];
+    }
+    hash.rounds <== hashRounds;
+
+    component isShort = LessThan(252);
+    isShort.in[0] <== inLen;
+    isShort.in[1] <== 63;
+
+    signal unflippedHashHex[64];
+    for (var idx = 0; idx < 64; idx++) {
+	unflippedHashHex[idx] <== hash.out[4 * idx] + 2 * hash.out[4 * idx + 1] + 4 * hash.out[4 * idx + 2] + 8 * hash.out[4 * idx + 3];
+    }
+
+    for (var idx = 0; idx < min(32, maxInLen \ 2); idx++) {
+	out[2 * idx] <== isShort.out * (in[2 * idx] - unflippedHashHex[2 * idx + 1]) + unflippedHashHex[2 * idx + 1];
+	out[2 * idx + 1] <== isShort.out * (in[2 * idx + 1] - unflippedHashHex[2 * idx]) + unflippedHashHex[2 * idx];
+    }
+    for (var idx = min(32, maxInLen \ 2); idx < 32; idx++) {
+	out[2 * idx] <== unflippedHashHex[2 * idx + 1];
+	out[2 * idx + 1] <== unflippedHashHex[2 * idx];
+    }
+    outLen <== isShort.out * (inLen - 64) + 64;
+}
