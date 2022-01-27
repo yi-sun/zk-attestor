@@ -34,6 +34,7 @@ echo "DONE ($((end-start))s)"
 echo "****GENERATING ZKEY 0****"
 start=`date +%s`
 NODE_OPTIONS="--max-old-space-size=56000" npx snarkjs groth16 setup "$BUILD_DIR"/"$CIRCUIT_NAME".r1cs "$PHASE1" "$BUILD_DIR"/"$CIRCUIT_NAME"_0.zkey
+#NODE_OPTIONS="--max-old-space-size=56000" npx snarkjs plonk setup -verbose "$BUILD_DIR"/"$CIRCUIT_NAME".r1cs "$PHASE1" "$BUILD_DIR"/"$CIRCUIT_NAME".zkey
 end=`date +%s`
 echo "DONE ($((end-start))s)"
 
@@ -45,7 +46,7 @@ echo "DONE ($((end-start))s)"
 
 echo "****VERIFYING FINAL ZKEY****"
 start=`date +%s`
-#NODE_OPTIONS="--max-old-space-size=56000" npx snarkjs zkey verify "$BUILD_DIR"/"$CIRCUIT_NAME".r1cs "$PHASE1" "$BUILD_DIR"/"$CIRCUIT_NAME".zkey
+#NODE_OPTIONS="--max-old-space-size=56000" npx snarkjs zkey verify -verbose "$BUILD_DIR"/"$CIRCUIT_NAME".r1cs "$PHASE1" "$BUILD_DIR"/"$CIRCUIT_NAME".zkey
 end=`date +%s`
 echo "DONE ($((end-start))s)"
 
@@ -58,11 +59,13 @@ echo "DONE ($((end-start))s)"
 echo "****GENERATING PROOF FOR SAMPLE INPUT****"
 start=`date +%s`
 npx snarkjs groth16 prove "$BUILD_DIR"/"$CIRCUIT_NAME".zkey "$BUILD_DIR"/witness.wtns "$BUILD_DIR"/proof.json "$BUILD_DIR"/public.json
+#npx snarkjs plonk prove "$BUILD_DIR"/"$CIRCUIT_NAME".zkey "$BUILD_DIR"/witness.wtns "$BUILD_DIR"/proof.json "$BUILD_DIR"/public.json
 end=`date +%s`
 echo "DONE ($((end-start))s)"
 
 echo "****VERIFYING PROOF FOR SAMPLE INPUT****"
 start=`date +%s`
 npx snarkjs groth16 verify "$BUILD_DIR"/vkey.json "$BUILD_DIR"/public.json "$BUILD_DIR"/proof.json
+#npx snarkjs plonk verify "$BUILD_DIR"/vkey.json "$BUILD_DIR"/public.json "$BUILD_DIR"/proof.json
 end=`date +%s`
 echo "DONE ($((end-start))s)"

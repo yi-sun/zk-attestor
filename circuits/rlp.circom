@@ -208,7 +208,7 @@ template SubArray(nIn, maxSelect, nInBits) {
     signal input start;
     signal input end;
 
-    signal output out[nIn];
+    signal output out[maxSelect];
     signal output outLen;
 
     component lt1 = LessEqThan(nInBits);

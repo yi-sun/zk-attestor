@@ -634,7 +634,6 @@ template MPTInclusionFixedKeyVarDepth(maxDepth, keyHexLen, maxValueHexLen) {
     }
     log(4444444444444);
     log(leaf.out);
-
     
     // masks for depth selector
     component depthEq[maxDepth];

@@ -3,45 +3,6 @@ pragma circom 2.0.1;
 include "./ethblockhash.circom";
 include "./mpt.circom";
 
-//component main {public [a, b, c, d, aLen, bLen, cLen, dLen]} = VarConcat4(2, 5, 3,
-//                                                                          2, 5, 3,
-//                                                                          1, 3, 2,
-//                                                                          3, 3, 2);
-
-//component main {public [rlpPrefixBits,
-//                        parentHashRlpBits,
-//                        ommersHashRlpBits,
-//                        beneficiaryRlpBits,
-//                        stateRootRlpBits,
-//                        transactionsRootRlpBits,
-//                        receiptsRootRlpBits,
-//                        logsBloomRlpBits,
-//                        difficultyRlpBits,
-//                        numberRlpBits,
-//                        gasLimitRlpBits,
-//                        gasUsedRlpBits,
-//                        timestampRlpBits,
-//                        extraDataRlpBits,
-//                        mixHashRlpBits,
-//                        nonceRlpBits,
-//                        basefeeRlpBits,
-//                        numberRlpBitLen,
-//                        gasUsedRlpBitLen,
-//                        extraDataRlpBitLen,
-//                        basefeeRlpBitLen]} = EthBlockHash();
-
-// component main {public [rlpPrefixBits,
-//                        parentHashRlpBits,
-//                        ommersHashRlpBits,
-//                        beneficiaryRlpBits,
-//                        stateRootRlpBits,
-//                        transactionsRootRlpBits,
-//                        receiptsRootRlpBits,
-//                        logsBloomRlpBits,
-//                        difficultyRlpBits,
-//                        suffixRlpBits,
-//                        suffixRlpBitLen]} = EthBlockHashMin();
-
 //component main {public [
 //    keyNibbleHexLen,
 //    keyNibbleHexs,
@@ -96,4 +57,23 @@ component main {public [
     nodeRlpHexs,
     nodeTypes,
     depth
-]} = MPTInclusionFixedKeyVarDepth(6, 64, 114);
+]} = MPTInclusionFixedKeyVarDepth(5, 64, 114);
+
+
+//template Test() {
+//    signal input a;
+//    signal input b;
+//    signal input c;
+//    
+//    signal output out;
+//
+//    component eq = IsEqual();
+//    eq.in[0] <== a;
+//    eq.in[1] <== b;
+//
+//    signal temp;
+//    temp <== eq.out * c;
+//    out <== temp;
+//}
+
+//component main {public [a, b, c]} = Test();
