@@ -34,45 +34,6 @@ template Pad0(inLenMin, inLenMax, outLen, outLenBits) {
     }
 }
 
-template Pad101(inLenMin, inLenMax, outLen, outLenBits) {
-    assert((2 ** outLenBits) >= outLen);
-    assert(inLenMax + 2 <= outLen);
-    signal input in[inLenMax];
-    signal input inLen;
-    signal output out[outLen];
-
-    component inLenVal = LessEqThan(outLenBits);
-    inLenVal.in[0] <== inLen;
-    inLenVal.in[1] <== inLenMax;
-    inLenVal.out === 1;
-
-    component inLess[inLenMax - inLenMin];
-    for (var idx = 0; idx < inLenMax - inLenMin; idx++) {
-        inLess[idx] = LessThan(outLenBits);
-        inLess[idx].in[0] <== idx + inLenMin;
-        inLess[idx].in[1] <== inLen;
-    }
-
-    component eq[inLenMax + 1 - inLenMin];
-    for (var idx = 0; idx < inLenMax + 1 - inLenMin; idx++) {
-        eq[idx] = IsEqual();
-        eq[idx].in[0] <== idx + inLenMin;
-        eq[idx].in[1] <== inLen;
-    }
-
-    for (var idx = 0; idx < inLenMin; idx++) {
-        out[idx] <== in[idx];
-    }
-    for (var idx = inLenMin; idx < inLenMax; idx++) {
-        out[idx] <== inLess[idx - inLenMin].out * in[idx] + eq[idx - inLenMin].out;
-    }
-    out[inLenMax] <== eq[inLenMax - inLenMin].out;
-    for (var idx = inLenMax + 1; idx < outLen - 1; idx++) {
-        out[idx] <== 0;
-    }
-    out[outLen - 1] <== 1;    
-}
-
 template ReorderPad101Hex(inLenMin, inLenMax, outLen, outLenBits) {
     assert((2 ** outLenBits) >= outLen);
     assert(inLenMax + 1 <= outLen);
