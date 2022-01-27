@@ -4,7 +4,7 @@ include "../node_modules/circomlib/circuits/bitify.circom";
 include "../node_modules/circomlib/circuits/comparators.circom";
 include "../node_modules/circomlib/circuits/multiplexer.circom";
 
-include "./keccak2.circom";
+include "./keccak.circom";
 include "./rlp.circom";
 
 function max(a, b) {

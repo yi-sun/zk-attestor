@@ -58,22 +58,3 @@ component main {public [
     nodeTypes,
     depth
 ]} = MPTInclusionFixedKeyVarDepth(5, 64, 114);
-
-
-//template Test() {
-//    signal input a;
-//    signal input b;
-//    signal input c;
-//    
-//    signal output out;
-//
-//    component eq = IsEqual();
-//    eq.in[0] <== a;
-//    eq.in[1] <== b;
-//
-//    signal temp;
-//    temp <== eq.out * c;
-//    out <== temp;
-//}
-
-//component main {public [a, b, c]} = Test();

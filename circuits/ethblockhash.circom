@@ -5,7 +5,7 @@ include "../node_modules/circomlib/circuits/comparators.circom";
 include "../node_modules/circomlib/circuits/multiplexer.circom";
 
 include "./rlp.circom";
-include "./keccak2.circom";
+include "./keccak.circom";
 
 template EthBlockHash() {
     signal input rlpPrefixBits[24];
