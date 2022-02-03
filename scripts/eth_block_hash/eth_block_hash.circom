@@ -1,6 +1,6 @@
 pragma circom 2.0.2;
 
-include "../../circuits/ethblockhash.circom";
+include "../../circuits/eth.circom";
 			
 component main {public [rlpPrefixHexs,
                         parentHashRlpHexs,
