@@ -168,7 +168,7 @@ template ExtensionCheck(maxKeyHexLen, maxNodeRefLen) {
 
     signal node_ref;
     node_ref <== node_ref_match.out * node_ref_len_match.out;
-    
+
     out <== key_path + node_ref;
 }
 
@@ -228,7 +228,7 @@ template BranchFixedKeyHexLen(maxNodeRefLen) {
     }
     branch_to_node_ref.start <== nodeStartSelector.out[0];
     branch_to_node_ref.end <== nodeStartSelector.out[0] + nodeRefLenSelector.out[0];
-    
+
     component node_ref_match = ArrayEq(maxNodeRefLen);
     for (var idx = 0; idx < maxNodeRefLen; idx++) {
 	node_ref_match.a[idx] <== branch_to_node_ref.out[idx];
@@ -239,7 +239,7 @@ template BranchFixedKeyHexLen(maxNodeRefLen) {
     component node_ref_len_match = IsEqual();
     node_ref_len_match.in[0] <== nodeRefHexLen;
     node_ref_len_match.in[1] <== nodeRefLenSelector.out[0];
-    
+
     out <== node_ref_match.out + node_ref_len_match.out;     
 }
 
