@@ -5,6 +5,10 @@
   "main": "index.js",
   "scripts": {
       "build": "./build_circuits.sh",
+      "build:storage": "cd ./scripts/storage_proof && ./build_storage_proof.sh",
+      "build:address": "cd ./scripts/address_proof && ./build_address_proof.sh",
+      "build:eth_block_hash": "cd ./scripts/eth_block_hash && ./build_eth_block_hash.sh",
+      "build:tx": "cd ./scripts/tx_proof && ./build_tx_proof.sh",
       "test": "NODE_OPTIONS='--max-old-space-size=56000' mocha -r ts-node/register 'test/**/*.ts'"
   },
   "repository": "git@github.com:yi-sun/eth-attestor.git",
