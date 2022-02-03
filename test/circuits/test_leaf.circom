@@ -13,4 +13,4 @@ component main {public [
     leafRlpValueLenHexLen,
     leafValueLenHexLen,
     leafRlpHexs
-]} = LeafFixedKeyHexLen(64, 66);
+]} = LeafCheck(64, 66);

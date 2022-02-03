@@ -140,3 +140,8 @@ template EthAddressStorageProof(addressDepth, storageDepth) {
 
     signal output out;
 }
+
+template EthTransactionProof(txMaxDepth) {
+
+
+}
