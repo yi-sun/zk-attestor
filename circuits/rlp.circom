@@ -92,9 +92,9 @@ template ArrayEq(nIn) {
 	idxLeq[idx].in[1] <== idx;
 
 	if (idx == 0) {
-	    match[idx] <== eq[idx].out + idxLeq[idx].out - eq[idx].out * idxLeq[idx].out;
+	    match[idx] <== eq[idx].out + idxLeq[idx].out * (1 - eq[idx].out);
 	} else {
-	    ors[idx - 1] <== eq[idx].out + idxLeq[idx].out - eq[idx].out * idxLeq[idx].out;
+	    ors[idx - 1] <== eq[idx].out + idxLeq[idx].out * (1 - eq[idx].out);
 	    match[idx] <== match[idx - 1] * ors[idx - 1];
 	}
     }

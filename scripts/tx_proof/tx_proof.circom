@@ -30,4 +30,4 @@ component main {public [
     nodeRlpHexs,
     nodeTypes,
     depth
-]} = MPTInclusion(6, 64, 1916);
+]} = MPTInclusion(6, 64, 234);

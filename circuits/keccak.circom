@@ -58,7 +58,7 @@ template ReorderPad101Hex(inLenMin, inLenMax, outLen, outLenBits) {
 	inFlip[2 * idx] <== in[2 * idx + 1];
 	inFlip[2 * idx + 1] <== in[2 * idx];
     }
-    
+
     component inLenVal = LessEqThan(outLenBits);
     inLenVal.in[0] <== inLen;
     inLenVal.in[1] <== inLenMax;
