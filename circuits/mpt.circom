@@ -171,7 +171,7 @@ template ExtensionCheck(maxKeyHexLen, maxNodeRefHexLen) {
     node_ref_len_match.in[1] <== nodeRefExtHexLen;
 
     signal node_ref;
-    node_ref <== node_ref_match.out * node_ref_len_match.out
+    node_ref <== node_ref_match.out * node_ref_len_match.out;
     
     log(222);
     log(key_path);
