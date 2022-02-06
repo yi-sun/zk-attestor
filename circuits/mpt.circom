@@ -17,6 +17,7 @@ function max(a, b) {
 template LeafCheck(maxKeyHexLen, maxValueHexLen) {
     var maxLeafRlpHexLen = 4 + (maxKeyHexLen + 2) + 4 + maxValueHexLen;
 
+    // FIXME: Differentiate between cases where keyLen is 0 and where the prefix+nibble is '1b'
     signal input keyNibbleHexLen;
     signal input keyNibbleHexs[maxKeyHexLen];
     signal input valueHexs[maxValueHexLen];
@@ -88,7 +89,24 @@ template LeafCheck(maxKeyHexLen, maxValueHexLen) {
     leaf_value_match.inLen <== leafValueLenHexLen;
 
     log(111);
-    log(key_path);
+    log(keyNibbleHexLen);
+    log(leafPathHexLen);
+    for (var idx = 0; idx < 5; idx++) {
+    	log(leaf_to_path.out[idx]);
+    }
+    for (var idx = 0; idx < 5; idx++) {
+	log(keyNibbleHexs[idx]);
+    }
+    log(leafValueLenHexLen);
+    for (var idx = 0; idx < 5; idx++) {
+    	log(leaf_to_value.out[idx]);
+    }
+    for (var idx = 0; idx < 5; idx++) {
+	log(valueHexs[idx]);
+    }    
+
+    log(key_path_len_match.out);
+    log(key_path_match.out);
     log(leaf_value_match.out);
 
     out <== key_path + leaf_value_match.out;
@@ -173,9 +191,25 @@ template ExtensionCheck(maxKeyHexLen, maxNodeRefHexLen) {
     signal node_ref;
     node_ref <== node_ref_match.out * node_ref_len_match.out;
     
+    log(222222);
+    log(key_path_len_match.out);
+    log(key_path_match.out);	
+    log(node_ref_match.out);
+    log(node_ref_len_match.out);	
     log(222);
-    log(key_path);
-    log(node_ref);
+    for (var idx = 0; idx < 5; idx++) {
+        log(extension_to_path.out[idx]);
+    }
+    for (var idx = 0; idx < 5; idx++) {
+	log(keyNibbleHexs[idx]);
+    }
+    log(222);
+    for (var idx = 0; idx < 5; idx++) {
+        log(extension_to_node_ref.out[idx]);
+    }
+    for (var idx = 0; idx < 5; idx++) {
+	log(nodeRefHexs[idx]);
+    }
 
     out <== key_path + node_ref;
 }
@@ -247,6 +281,10 @@ template BranchFixedKeyHexLen(maxNodeRefHexLen) {
     component node_ref_len_match = IsEqual();
     node_ref_len_match.in[0] <== nodeRefHexLen;
     node_ref_len_match.in[1] <== nodeRefLenSelector.out[0];
+
+    log(666);
+    log(node_ref_match.out);
+    log(node_ref_len_match.out);
 
     out <== node_ref_match.out + node_ref_len_match.out;     
 }
@@ -504,12 +542,24 @@ template MPTInclusionFixedKeyHexLen(maxDepth, keyHexLen, maxValueHexLen) {
 
     // compute key fragments
     // if branch: nibble is of size 1
-    // if ext: nibble is of size nodePathHexLen[layer]
+    // if ext: nibble is of size nodePathHexLen[layer] unless nodePathHexLen[layer] == 0, in which case it is of size 1 (prefix len 1, path len 1)
+    component isLiteralPath[maxDepth - 1];
+    for (var layer = 0; layer < maxDepth - 1; layer++) {
+    	isLiteralPath[layer] = IsZero();
+	isLiteralPath[layer].in <== nodePathHexLen[layer];
+    }
+
     signal start[maxDepth];
     start[0] <== 0;
     for (var layer = 0; layer < maxDepth - 1; layer++) {
 	// nodeTypes[layer] = 1 if ext, 0 if branch
-	start[layer + 1] <== start[layer] + 1 + nodeTypes[layer] * (nodePathHexLen[layer] - 1);
+	// if extension and nodePathHexLen[layer] == 0, then the RLP of the prefix + path is a
+	// 2-hex literal (1 prefix, 1 path), so we should advance the start by 1 hexes
+	start[layer + 1] <== start[layer] + 1 - nodeTypes[layer] + nodeTypes[layer] * (nodePathHexLen[layer] + isLiteralPath[layer].out);
+    }
+
+    for (var layer = 0; layer < maxDepth; layer++) {
+    	log(start[layer]);
     }
 
     // constrain Leaf: rlp([prefix (20 or 3) | path, value])    
