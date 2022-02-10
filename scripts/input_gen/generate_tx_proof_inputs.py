@@ -1,3 +1,4 @@
+import argparse
 import json
 import rlp
 import sha3
@@ -375,92 +376,102 @@ def gen_proof_input(proof, root, key, value, maxDepth, maxKeyHexLen, maxValueHex
            "depth": depth }
     return ret
 
-with open('block.json', 'r') as f:
-    block = json.loads(f.read())
-    
-block = block['result']
-block_hash = block['hash']
+def get_pf(block, tx_idx):
+    block = block['result']
+    block_hash = block['hash']
 
-header = [
-    bytearray.fromhex(block['parentHash'][2:]),
-    bytearray.fromhex(block['sha3Uncles'][2:]),
-    bytearray.fromhex(block['miner'][2:]),
-    bytearray.fromhex(block['stateRoot'][2:]),
-    bytearray.fromhex(block['transactionsRoot'][2:]),
-    bytearray.fromhex(block['receiptsRoot'][2:]),
-    bytearray.fromhex(block['logsBloom'][2:]),
-    int(block['difficulty'], 0),
-    int(block['number'], 0),
-    int(block['gasLimit'], 0),
-    int(block['gasUsed'], 0),
-    int(block['timestamp'], 0),
-    bytearray.fromhex(block['extraData'][2:]),
-    bytearray.fromhex(block['mixHash'][2:]),
-    bytearray.fromhex(block['nonce'][2:]),
-    int(block['baseFeePerGas'], 0),
-]
+    header = [
+        bytearray.fromhex(block['parentHash'][2:]),
+        bytearray.fromhex(block['sha3Uncles'][2:]),
+        bytearray.fromhex(block['miner'][2:]),
+        bytearray.fromhex(block['stateRoot'][2:]),
+        bytearray.fromhex(block['transactionsRoot'][2:]),
+        bytearray.fromhex(block['receiptsRoot'][2:]),
+        bytearray.fromhex(block['logsBloom'][2:]),
+        int(block['difficulty'], 0),
+        int(block['number'], 0),
+        int(block['gasLimit'], 0),
+        int(block['gasUsed'], 0),
+        int(block['timestamp'], 0),
+        bytearray.fromhex(block['extraData'][2:]),
+        bytearray.fromhex(block['mixHash'][2:]),
+        bytearray.fromhex(block['nonce'][2:]),
+        int(block['baseFeePerGas'], 0),
+    ]
 
-tx_list = block['transactions']
-raw_tx_dict = {}
-print('{} tx in block'.format(len(tx_list)))
-for idx, tx in enumerate(tx_list):
-    if tx['type'] == '0x0':
-        raw_tx = [int(tx['nonce'], 16),
+    tx_list = block['transactions']
+    raw_tx_dict = {}
+    print('{} tx in block'.format(len(tx_list)))
+    for idx, tx in enumerate(tx_list):
+        if tx['type'] == '0x0':
+            raw_tx = [int(tx['nonce'], 16),
                   int(tx['gasPrice'], 16),
                   int(tx['gas'], 16),
                   bytearray.fromhex(tx['to'][2:]),
                   int(tx['value'], 16)]
-        if tx['to'] == '':
-            raw_tx.append(bytearray.fromhex(tx['init'][2:]))
-        else:
-            raw_tx.append(bytearray.fromhex(tx['input'][2:]))
-        raw_tx = raw_tx + [
+            if tx['to'] == '':
+                raw_tx.append(bytearray.fromhex(tx['init'][2:]))
+            else:
+                raw_tx.append(bytearray.fromhex(tx['input'][2:]))
+            raw_tx = raw_tx + [
                 int(tx['v'], 16),
                 int(tx['r'], 16),
                 int(tx['s'], 16)]
-        raw_tx_dict[rlp.encode(idx)] = rlp.encode(raw_tx)
-    elif tx['type'] == '0x2':
-        raw_tx = [int(tx['chainId'], 16),
-                  int(tx['nonce'], 16),
-                  int(tx['maxPriorityFeePerGas'], 16),
-                  int(tx['maxFeePerGas'], 16),
-                  int(tx['gas'], 16),
-                  bytearray.fromhex(tx['to'][2:]),
-                  int(tx['value'], 16)]
-        if tx['to'] == '':
-            raw_tx.append(bytearray.fromhex(tx['init'][2:]))
-        else:
-            raw_tx.append(bytearray.fromhex(tx['input'][2:]))
-        raw_tx = raw_tx + [
+            raw_tx_dict[rlp.encode(idx)] = rlp.encode(raw_tx)
+        elif tx['type'] == '0x2':
+            raw_tx = [int(tx['chainId'], 16),
+                      int(tx['nonce'], 16),
+                      int(tx['maxPriorityFeePerGas'], 16),
+                      int(tx['maxFeePerGas'], 16),
+                      int(tx['gas'], 16),
+                      bytearray.fromhex(tx['to'][2:]),
+            int(tx['value'], 16)]
+            if tx['to'] == '':
+                raw_tx.append(bytearray.fromhex(tx['init'][2:]))
+            else:
+                raw_tx.append(bytearray.fromhex(tx['input'][2:]))
+            raw_tx = raw_tx + [
                 tx['accessList'],
                 int(tx['v'], 16),
                 int(tx['r'], 16),
                 int(tx['s'], 16)]
-        raw_tx_dict[rlp.encode(idx)] = bytearray.fromhex('02') + rlp.encode(raw_tx)        
-    else:
-        print('type not handled: {}'.format(tx['type']))
-    print(idx, rlp.encode(idx).hex(), tx['type'], tx['hash'], len(rlp.encode(raw_tx).hex()))
+            raw_tx_dict[rlp.encode(idx)] = bytearray.fromhex('02') + rlp.encode(raw_tx)        
+        else:
+            print('type not handled: {}'.format(tx['type']))
+        print(idx, rlp.encode(idx).hex(), tx['type'], tx['hash'], len(rlp.encode(raw_tx).hex()))
 
-trie, storage = construct_mpt(raw_tx_dict)
+    trie, storage = construct_mpt(raw_tx_dict)
 
-TX_IDX = 337
+    root = mpt.node.Node.decode(storage[trie._root])
+    path = mpt.nibble_path.NibblePath(rlp.encode(tx_idx))
+    pf = get_proof(storage, [], root, path)
+    print(rlp.encode(tx_idx).hex(), pf)
+    value = trie.get(rlp.encode(tx_idx)).hex()
+    print(root)
 
-root = mpt.node.Node.decode(storage[trie._root])
-path = mpt.nibble_path.NibblePath(rlp.encode(TX_IDX))
-pf = get_proof(storage, [], root, path)
-print(rlp.encode(TX_IDX).hex(), pf)
-value = trie.get(rlp.encode(TX_IDX)).hex()
-print(root)
+    ret = gen_proof_input(pf, keccak256(root.encode().hex()), rlp.encode(tx_idx).hex(), value, 6, 64, 234)
+    return ret
 
-ret = gen_proof_input(pf, keccak256(root.encode().hex()), rlp.encode(TX_IDX).hex(), value, 6, 64, 234)
+parser = argparse.ArgumentParser()
+parser.add_argument('--debug', action='store_true', default=False)
+parser.add_argument('--tx_idx', type=int, default=2)
+args = parser.parse_args()
 
-print(json.dumps(ret))
+def main():
+    with open('block.json', 'r') as f:
+        block = json.loads(f.read())
 
-for k in ret:
-    if type(ret[k]) is not int and type(ret[k][0]) is not int:
-        for a in ret[k]:
-            print(k, len(ret[k]), len(a))
-    elif type(ret[k]) is not int:
-        print(k, len(ret[k]))
-    else:
-        print(k)
+    pf = get_pf(block, args.tx_idx)
+    if args.debug:
+        print(json.dumps(pf))
+        for k in pf:
+            if type(pf[k]) is not int and type(pf[k][0]) is not int:
+                for a in pf[k]:
+                    print(k, len(pf[k]), len(a))
+            elif type(pf[k]) is not int:
+                print(k, len(pf[k]))
+            else:
+                print(k)
+
+if __name__ == '__main__':
+    main()

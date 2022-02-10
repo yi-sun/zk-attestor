@@ -1,9 +1,11 @@
+import argparse
 import json
+
+import mpt
 import rlp
 import sha3
 
 from mpt import MerklePatriciaTrie
-import mpt
 
 def byte_reverse(bin_str):
     ret = []
@@ -249,52 +251,77 @@ def gen_proof_input(proof, root, key, value, maxValueHexLen, maxDepth=None):
         "depth": depth
     }
     return ret
+
+def get_addr_pf(punk_block, slot=12):
+    print(punk_block['result']['nonce'])
+    punk1pf = punk_block['result']['storageProof'][slot]
+    key = keccak256(punk1pf['key'][2:])
+    value = punk1pf['value'][2:]
+    proof = punk1pf['proof']
+    root = punk_block['result']['storageHash'][2:]
+
+    print('addr:      {}'.format(punk_block['result']['address']))
+    print('stor root: {}'.format(root))
+    print('key:       {}'.format(key))
+    print('value:     {}'.format(value))
     
-with open('punk_block.json', 'r') as f:
-    punk_block = json.loads(f.read())
+    pf = gen_proof_input(proof, root, key, rlp.encode(bytearray.fromhex(value)).hex(), 114)
+    return pf
 
-print(punk_block['result']['nonce'])
-punk1pf = punk_block['result']['storageProof'][12]
-key = keccak256(punk1pf['key'][2:])
-value = punk1pf['value'][2:]
-proof = punk1pf['proof']
-root = punk_block['result']['storageHash'][2:]
+def get_storage_pf(punk_block):
+    acct_pf = punk_block['result']['accountProof']
+    key = keccak256(punk_block['result']['address'][2:])
+    nonce = punk_block['result']['nonce'][2:]
+    balance = punk_block['result']['balance'][2:]
+    storageHash = punk_block['result']['storageHash'][2:]
+    codeHash = punk_block['result']['codeHash'][2:]
 
-print('addr:      {}'.format(punk_block['result']['address']))
-print('stor root: {}'.format(root))
-print('key:       {}'.format(key))
-print('value:     {}'.format(value))
+    addr_rlp = rlp.encode([int(nonce, 16),
+                           int(balance, 16),
+                           bytearray.fromhex(storageHash),
+                           bytearray.fromhex(codeHash)])
     
-pf = gen_proof_input(proof, root, key, rlp.encode(bytearray.fromhex(value)).hex(), 114)
-print(json.dumps(pf))
-for k in pf:
-    if type(pf[k]) is not int and type(pf[k][0]) is not int:
-        for a in pf[k]:
-            print(k, len(pf[k]), len(a))
-    elif type(pf[k]) is not int:
-        print(k, len(pf[k]))
-    else:
-        print(k)
+    print('key:         {}'.format(key))
+    print('value:       {}'.format(addr_rlp.hex()))
 
-acct_pf = punk_block['result']['accountProof']
-key = keccak256(punk_block['result']['address'][2:])
-nonce = punk_block['result']['nonce'][2:]
-balance = punk_block['result']['balance'][2:]
-storageHash = punk_block['result']['storageHash'][2:]
-codeHash = punk_block['result']['codeHash'][2:]
+    print('nonce:       {}'.format(nonce))
+    print('balance:     {}'.format(balance))
+    print('storageHash: {}'.format(storageHash))
+    print('codeHash:    {}'.format(codeHash))
 
-addr_rlp = rlp.encode([int(nonce, 16),
-                       int(balance, 16),
-                       bytearray.fromhex(storageHash),
-                       bytearray.fromhex(codeHash)])
+    pf2 = gen_proof_input(acct_pf, keccak256(acct_pf[0][2:]), key, addr_rlp.hex(), 228)
+    return pf2
 
-print('key:         {}'.format(key))
-print('value:       {}'.format(addr_rlp.hex()))
+parser = argparse.ArgumentParser()
+parser.add_argument('--debug', action='store_true', default=False)
+parser.add_argument('--addr', action='store_true', default=False)
+parser.add_argument('--storage', action='store_true', default=False)
+args = parser.parse_args()
 
-print('nonce:       {}'.format(nonce))
-print('balance:     {}'.format(balance))
-print('storageHash: {}'.format(storageHash))
-print('codeHash:    {}'.format(codeHash))
+def main():
+    with open('punk_block.json', 'r') as f:
+        punk_block = json.loads(f.read())
 
-pf2 = gen_proof_input(acct_pf, keccak256(acct_pf[0][2:]), key, addr_rlp.hex(), 228)
-print(json.dumps(pf2))
+    if args.addr:
+        addr_pf = get_addr_pf(punk_block)
+        print(json.dumps(addr_pf))
+        if args.debug:
+            for k in addr_pf:
+                if type(addr_pf[k]) is not int and type(addr_pf[k][0]) is not int:
+                    for a in addr_pf[k]:
+                        print(k, len(addr_pf[k]), len(a))
+                elif type(addr_pf[k]) is not int:
+                    print(k, len(addr_pf[k]))
+                else:
+                    print(k)
+
+    if args.storage:
+        storage_pf = get_storage_pf(punk_block)
+        print(json.dumps(storage_pf))
+
+    
+
+if __name__ == '__main__':
+    main()
+
+
