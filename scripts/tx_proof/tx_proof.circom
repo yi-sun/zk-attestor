@@ -15,19 +15,12 @@ component main {public [
     leafRlpValueLenHexLen,
     leafValueLenHexLen,
     leafRlpHexs,
-    terminalBranchRlpLengthHexLen,
-    terminalBranchNodeRefHexLen,
-    terminalBranchVtRlpLenHexLen,
-    terminalBranchVtValueHexLen,
-    terminalBranchRlpHexs,
     nodeRlpLengthHexLen,    
     nodePathRlpHexLen,
     nodePathPrefixHexLen,
     nodePathHexLen,    
     nodeRefHexLen,
-    nodeVtRlpLenHexLen,
-    nodeVtValueHexLen,    
     nodeRlpHexs,
     nodeTypes,
     depth
-]} = MPTInclusion(6, 64, 234);
+]} = MPTInclusionNoBranchTermination(5, 6, 1500);
