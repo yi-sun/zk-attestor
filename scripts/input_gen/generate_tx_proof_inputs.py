@@ -385,6 +385,42 @@ def gen_proof_input(proof, root, key, value, maxDepth, maxKeyHexLen, maxValueHex
            "depth": depth }
     return ret
 
+def get_raw_tx(tx):
+    if tx['type'] == '0x0':
+        raw_tx = [int(tx['nonce'], 16),
+                  int(tx['gasPrice'], 16),
+                  int(tx['gas'], 16),
+                  bytearray.fromhex(tx['to'][2:]),
+                  int(tx['value'], 16)]
+        if tx['to'] == '':
+            raw_tx.append(bytearray.fromhex(tx['init'][2:]))
+        else:
+            raw_tx.append(bytearray.fromhex(tx['input'][2:]))
+        raw_tx = raw_tx + [
+            int(tx['v'], 16),
+            int(tx['r'], 16),
+            int(tx['s'], 16)]
+    elif tx['type'] == '0x2':
+        raw_tx = [int(tx['chainId'], 16),
+                  int(tx['nonce'], 16),
+                  int(tx['maxPriorityFeePerGas'], 16),
+                  int(tx['maxFeePerGas'], 16),
+                  int(tx['gas'], 16),
+                  bytearray.fromhex(tx['to'][2:]),
+                  int(tx['value'], 16)]
+        if tx['to'] == '':
+            raw_tx.append(bytearray.fromhex(tx['init'][2:]))
+        else:
+            raw_tx.append(bytearray.fromhex(tx['input'][2:]))
+        raw_tx = raw_tx + [
+            tx['accessList'],
+            int(tx['v'], 16),
+            int(tx['r'], 16),
+            int(tx['s'], 16)]
+    else:
+        assert('type not handled: {}'.format(tx['type']))
+    return raw_tx
+
 def get_pf(block, tx_idx, max_depth=None, max_key_len=64, max_val_len=234, debug=False):
     block = block['result']
     block_hash = block['hash']
@@ -414,37 +450,10 @@ def get_pf(block, tx_idx, max_depth=None, max_key_len=64, max_val_len=234, debug
         print('{} tx in block'.format(len(tx_list)))
     for idx, tx in enumerate(tx_list):
         if tx['type'] == '0x0':
-            raw_tx = [int(tx['nonce'], 16),
-                  int(tx['gasPrice'], 16),
-                  int(tx['gas'], 16),
-                  bytearray.fromhex(tx['to'][2:]),
-                  int(tx['value'], 16)]
-            if tx['to'] == '':
-                raw_tx.append(bytearray.fromhex(tx['init'][2:]))
-            else:
-                raw_tx.append(bytearray.fromhex(tx['input'][2:]))
-            raw_tx = raw_tx + [
-                int(tx['v'], 16),
-                int(tx['r'], 16),
-                int(tx['s'], 16)]
+            raw_tx = get_raw_tx(tx)
             raw_tx_dict[rlp.encode(idx)] = rlp.encode(raw_tx)
         elif tx['type'] == '0x2':
-            raw_tx = [int(tx['chainId'], 16),
-                      int(tx['nonce'], 16),
-                      int(tx['maxPriorityFeePerGas'], 16),
-                      int(tx['maxFeePerGas'], 16),
-                      int(tx['gas'], 16),
-                      bytearray.fromhex(tx['to'][2:]),
-            int(tx['value'], 16)]
-            if tx['to'] == '':
-                raw_tx.append(bytearray.fromhex(tx['init'][2:]))
-            else:
-                raw_tx.append(bytearray.fromhex(tx['input'][2:]))
-            raw_tx = raw_tx + [
-                tx['accessList'],
-                int(tx['v'], 16),
-                int(tx['r'], 16),
-                int(tx['s'], 16)]
+            raw_tx = get_raw_tx(tx)
             raw_tx_dict[rlp.encode(idx)] = bytearray.fromhex('02') + rlp.encode(raw_tx)        
         else:
             print('type not handled: {}'.format(tx['type']))
@@ -476,7 +485,8 @@ def main():
         block = json.loads(f.read())
 
     pf = get_pf(block, args.tx_idx, max_depth=args.max_depth, max_key_len=args.max_key_len, max_val_len=args.max_val_len, debug=args.debug)
-    
+    print('tx_idx: {:3} depth: {:3} key_len: {:6} val_len: {:5}'.format(args.tx_idx, pf['depth'], len(rlp.encode(args.tx_idx).hex()), len(rlp.encode(get_raw_tx(block['result']['transactions'][args.tx_idx])).hex())))
+          
     pf_str = pprint.pformat(pf, width=100, compact=True).replace("'", '"')
     with open(args.file_str, 'w') as f:
         f.write(pf_str)

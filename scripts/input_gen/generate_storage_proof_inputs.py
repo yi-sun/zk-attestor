@@ -250,7 +250,7 @@ def gen_proof_input(proof, root, key, value, maxValueHexLen, maxDepth=None, debu
     }
     return ret
 
-def get_storage_pf(punk_pfs, slot=None, debug=False):
+def get_storage_pf(punk_pfs, slot=None, max_depth=8, debug=False):
     punk_pf = None
     for x in punk_pfs['result']['storageProof']:
         if x['key'] == slot:
@@ -270,7 +270,7 @@ def get_storage_pf(punk_pfs, slot=None, debug=False):
         print('key:       {}'.format(key))
         print('value:     {}'.format(value))
     
-    pf = gen_proof_input(proof, root, key, rlp.encode(bytearray.fromhex(value)).hex(), 114, debug=debug)
+    pf = gen_proof_input(proof, root, key, rlp.encode(bytearray.fromhex(value)).hex(), 114, maxDepth=max_depth, debug=debug)
     return pf
 
 def get_addr_pf(punk_pfs, debug=False):
@@ -304,6 +304,7 @@ parser.add_argument('--addr_file_str', type=str, default='inputs/input_address_p
 
 parser.add_argument('--storage', action='store_true', default=False)
 parser.add_argument('--storage_file_str', type=str, default='inputs/input_storage_proof.json')
+parser.add_argument('--storage_max_depth', type=int, default=8)
 parser.add_argument('--slot', type=int, default=10)
 parser.add_argument('--punk_slot', type=int, default=0)
 args = parser.parse_args()
@@ -342,7 +343,7 @@ def main():
             x = x + y
             slot = keccak256(x)
             
-        storage_pf = get_storage_pf(punk_block, slot=slot, debug=args.debug)
+        storage_pf = get_storage_pf(punk_block, slot=slot, max_depth=args.storage_max_depth, debug=args.debug)
         print('Punk {:5} depth {:3}'.format(args.punk_slot, storage_pf['depth']))
         
         pf_str = pprint.pformat(storage_pf, width=100, compact=True).replace("'", '"')
