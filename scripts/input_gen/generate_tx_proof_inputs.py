@@ -1,5 +1,6 @@
 import argparse
 import json
+import pprint
 import rlp
 import sha3
 
@@ -455,15 +456,20 @@ def get_pf(block, tx_idx):
 parser = argparse.ArgumentParser()
 parser.add_argument('--debug', action='store_true', default=False)
 parser.add_argument('--tx_idx', type=int, default=2)
+parser.add_argument('--file_str', type=str, default='input_tx_proof.json')
 args = parser.parse_args()
 
 def main():
-    with open('block.json', 'r') as f:
+    with open('punk_block.json', 'r') as f:
         block = json.loads(f.read())
 
     pf = get_pf(block, args.tx_idx)
+    pf_str = pprint.pformat(pf, width=100, compact=True).replace("'", '"')
+    with open(args.file_str, 'w') as f:
+        f.write(pf_str)
+        
     if args.debug:
-        print(json.dumps(pf))
+        print(pf_str)
         for k in pf:
             if type(pf[k]) is not int and type(pf[k][0]) is not int:
                 for a in pf[k]:

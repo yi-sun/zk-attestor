@@ -1,6 +1,7 @@
 build/
 node_modules/
 pot*.ptau
+INFURA_ID
 
 *.swp
 *~

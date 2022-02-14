@@ -1,5 +1,6 @@
 import argparse
 import json
+import pprint
 
 import mpt
 import rlp
@@ -96,7 +97,7 @@ def gen_proof_input(proof, root, key, value, maxValueHexLen, maxDepth=None):
 
             value_rlp_prefix = node[curr_idx: curr_idx + 2]
             curr_idx = curr_idx + 2
-            print(value_rlp_prefix)
+
             if int(value_rlp_prefix, 16) <= int('b7', 16):
                 leafRlpValueLenHexLen = 0
                 leafValueLenHexLen = 2 * (int(value_rlp_prefix, 16) - int('80', 16))
@@ -147,10 +148,8 @@ def gen_proof_input(proof, root, key, value, maxValueHexLen, maxDepth=None):
             for idx2, b in enumerate(node_decode.branches):
                 print(idx, 'Branch', idx2, b.hex())
         elif type(node_decode) is mpt.node.Node.Extension:
-            print(node_decode.path)
             rlp_prefix = node[2:4]
             curr_idx = 4
-            print('bb', rlp_prefix)
             if int(rlp_prefix, 16) <= int('f7', 16):
                 nodeRlpLengthHexLen.append(0)
             else:
@@ -159,7 +158,6 @@ def gen_proof_input(proof, root, key, value, maxValueHexLen, maxDepth=None):
 
             rlp_prefix = node[curr_idx: curr_idx + 2]
             curr_idx = curr_idx + 2
-            print('cc', rlp_prefix)
             is_no_prefix = False
             if int(rlp_prefix, 16) <= int('7f', 16):
                 nodePathRlpHexLen.append(0)
@@ -198,8 +196,6 @@ def gen_proof_input(proof, root, key, value, maxValueHexLen, maxDepth=None):
             rlp_prefix = node[curr_idx: curr_idx + 2]
             curr_idx = curr_idx + 2
             temp = []
-            print('aa', curr_idx, rlp_prefix)
-            print(node[curr_idx:])
             if int(rlp_prefix, 16) <= int('b7', 16):
                 temp.append(2 * (int(rlp_prefix, 16) - int('80', 16)))
                 curr_idx = curr_idx + temp[-1]
@@ -211,11 +207,10 @@ def gen_proof_input(proof, root, key, value, maxValueHexLen, maxDepth=None):
             temp = temp + [0 for idx in range(NODE_RLP_HEXS_LEN - len(temp))]
             nodeRlpHexs.append(temp)                      
             nodeTypes.append(1)
-#            print(idx, 'Extension', nhash, node_decode.encode().hex())
-#            print(idx, 'Extension', node_decode.path._data.hex(), node_decode.next_ref.hex())
+            print(idx, 'Extension', nhash, node_decode.encode().hex())
+            print(idx, 'Extension', node_decode.path._data.hex(), node_decode.next_ref.hex())
 
     if maxDepth is not None:
-        print(len(proof))
         for idx in range(maxDepth - len(proof)):
             nodeRlpLengthHexLen.append(0)
             nodePathRlpHexLen.append(0)
@@ -252,15 +247,19 @@ def gen_proof_input(proof, root, key, value, maxValueHexLen, maxDepth=None):
     }
     return ret
 
-def get_addr_pf(punk_block, slot=12):
-    print(punk_block['result']['nonce'])
-    punk1pf = punk_block['result']['storageProof'][slot]
-    key = keccak256(punk1pf['key'][2:])
-    value = punk1pf['value'][2:]
-    proof = punk1pf['proof']
-    root = punk_block['result']['storageHash'][2:]
+def get_storage_pf(punk_pfs, slot=None):
+    punk_pf = None
+    for x in punk_pfs['result']['storageProof']:
+        if x['key'] == slot:
+            punk_pf = x
+    assert(punk_pf is not None)
+            
+    key = keccak256(punk_pf['key'][2:])
+    value = punk_pf['value'][2:]
+    proof = punk_pf['proof']
+    root = punk_pfs['result']['storageHash'][2:]
 
-    print('addr:      {}'.format(punk_block['result']['address']))
+    print('addr:      {}'.format(punk_pfs['result']['address']))
     print('stor root: {}'.format(root))
     print('key:       {}'.format(key))
     print('value:     {}'.format(value))
@@ -268,13 +267,13 @@ def get_addr_pf(punk_block, slot=12):
     pf = gen_proof_input(proof, root, key, rlp.encode(bytearray.fromhex(value)).hex(), 114)
     return pf
 
-def get_storage_pf(punk_block):
-    acct_pf = punk_block['result']['accountProof']
-    key = keccak256(punk_block['result']['address'][2:])
-    nonce = punk_block['result']['nonce'][2:]
-    balance = punk_block['result']['balance'][2:]
-    storageHash = punk_block['result']['storageHash'][2:]
-    codeHash = punk_block['result']['codeHash'][2:]
+def get_addr_pf(punk_pfs):
+    acct_pf = punk_pfs['result']['accountProof']
+    key = keccak256(punk_pfs['result']['address'][2:])
+    nonce = punk_pfs['result']['nonce'][2:]
+    balance = punk_pfs['result']['balance'][2:]
+    storageHash = punk_pfs['result']['storageHash'][2:]
+    codeHash = punk_pfs['result']['codeHash'][2:]
 
     addr_rlp = rlp.encode([int(nonce, 16),
                            int(balance, 16),
@@ -289,23 +288,32 @@ def get_storage_pf(punk_block):
     print('storageHash: {}'.format(storageHash))
     print('codeHash:    {}'.format(codeHash))
 
-    pf2 = gen_proof_input(acct_pf, keccak256(acct_pf[0][2:]), key, addr_rlp.hex(), 228)
-    return pf2
+    pf = gen_proof_input(acct_pf, keccak256(acct_pf[0][2:]), key, addr_rlp.hex(), 228)
+    return pf
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--debug', action='store_true', default=False)
 parser.add_argument('--addr', action='store_true', default=False)
+parser.add_argument('--addr_file_str', type=str, default='input_address_proof.json')
+
 parser.add_argument('--storage', action='store_true', default=False)
+parser.add_argument('--storage_file_str', type=str, default='input_storage_proof.json')
+parser.add_argument('--slot', type=int, default=10)
+parser.add_argument('--punk_slot', type=int, default=0)
 args = parser.parse_args()
 
 def main():
-    with open('punk_block.json', 'r') as f:
+    with open('punk_pfs.json', 'r') as f:
         punk_block = json.loads(f.read())
 
     if args.addr:
         addr_pf = get_addr_pf(punk_block)
-        print(json.dumps(addr_pf))
+        pf_str = pprint.pformat(addr_pf, width=100, compact=True).replace("'", '"')
+        with open(args.addr_file_str, 'w') as f:
+            f.write(pf_str)
+
         if args.debug:
+            print(pf_str)
             for k in addr_pf:
                 if type(addr_pf[k]) is not int and type(addr_pf[k][0]) is not int:
                     for a in addr_pf[k]:
@@ -316,10 +324,24 @@ def main():
                     print(k)
 
     if args.storage:
-        storage_pf = get_storage_pf(punk_block)
-        print(json.dumps(storage_pf))
+        if args.slot < 10:
+            x = hex(args.slot)[2:]
+            x = ''.join(['0' for idx in range(64 - len(x))]) + x
+            slot = x
+        else:
+            x = hex(args.punk_slot)[2:]
+            x = ''.join(['0' for idx in range(64 - len(x))]) + x
+            y = hex(10)[2:]
+            y = ''.join(['0' for idx in range(64 - len(y))]) + y
+            x = x + y
+            slot = keccak256(x)
+        storage_pf = get_storage_pf(punk_block, slot=slot)
+        pf_str = pprint.pformat(storage_pf, width=100, compact=True).replace("'", '"')
+        with open(args.storage_file_str, 'w') as f:
+            f.write(pf_str)
 
-    
+        if args.debug:
+            print(pf_str)
 
 if __name__ == '__main__':
     main()
