@@ -26,34 +26,49 @@ function log_ceil(n) {
    return 254;
 }
 
-template Pad0(inLenMin, inLenMax, outLen, outLenBits) {
-    assert((2 ** outLenBits) >= outLen);
+template Pad0(inLenMin, inLenMax, outLen) {
     assert(inLenMax + 1 <= outLen);
     signal input in[inLenMax];
     signal input inLen;
     signal output out[outLen];
 
-    component inLenVal = LessEqThan(outLenBits);
-    inLenVal.in[0] <== inLen;
-    inLenVal.in[1] <== inLenMax;
-    inLenVal.out === 1;
-
-    component inLess[inLenMax - inLenMin];
-    for (var idx = 0; idx < inLenMax - inLenMin; idx++) {
-        inLess[idx] = LessThan(outLenBits);
-        inLess[idx].in[0] <== idx + inLenMin;
-        inLess[idx].in[1] <== inLen;
-    }
-
     for (var idx = 0; idx < inLenMin; idx++) {
         out[idx] <== in[idx];
     }
     for (var idx = inLenMin; idx < inLenMax; idx++) {
-        out[idx] <== inLess[idx - inLenMin].out * in[idx];
+        out[idx] <-- (idx < inLen) * in[idx];
     }
     for (var idx = inLenMax; idx < outLen; idx++) {
         out[idx] <== 0;
     }
+
+    component eqs[inLenMax - inLenMin];
+    component eq_sum_selector = Multiplexer(1, inLenMax - inLenMin + 1);
+    eq_sum_selector.inp[0][0] <== 0;
+    for (var idx = inLenMin; idx < inLenMax; idx++) {
+        eqs[idx - inLenMin] = IsEqual();
+        eqs[idx - inLenMin].in[0] <== out[idx];
+        eqs[idx - inLenMin].in[1] <== in[idx];
+
+        eq_sum_selector.inp[idx - inLenMin + 1][0] <== eq_sum_selector.inp[idx - inLenMin][0] + eqs[idx - inLenMin].out;
+    }
+    eq_sum_selector.sel <== inLen - inLenMin;
+    eq_sum_selector.out[0] === inLen - inLenMin;
+
+    component zeros[inLenMax - inLenMin];
+    component zero_sum_selector = Multiplexer(1, inLenMax - inLenMin);
+    for (var idx = inLenMax - 1; idx >= inLenMin; idx--) {
+        zeros[idx - inLenMin] = IsZero();
+        zeros[idx - inLenMin].in <== out[idx];
+
+        if (idx == inLenMax - 1) {
+            zero_sum_selector.inp[idx - inLenMin][0] <== zeros[idx - inLenMin].out;
+        } else {
+            zero_sum_selector.inp[idx - inLenMin][0] <== zeros[idx - inLenMin].out + zero_sum_selector.inp[idx - inLenMin + 1][0];
+        }
+    }
+    zero_sum_selector.sel <== inLen - inLenMin;
+    zero_sum_selector.out[0] === inLenMax - inLen;
 }
 
 template ReorderPad101Hex(inLenMin, inLenMax, outLen, outLenBits) {
@@ -75,7 +90,7 @@ template ReorderPad101Hex(inLenMin, inLenMax, outLen, outLenBits) {
     inLenVal.in[1] <== inLenMax;
     inLenVal.out === 1;
 
-    component pad0 = Pad0(inLenMin, inLenMax, outLen, outLenBits);
+    component pad0 = Pad0(inLenMin, inLenMax, outLen);
     for (var idx = 0; idx < inLenMax; idx++) {
 	pad0.in[idx] <== inFlip[idx];
     }
