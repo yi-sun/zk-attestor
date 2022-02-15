@@ -15,6 +15,17 @@ function min(a, b) {
     return b;
 }
 
+function log_ceil(n) {
+   var n_temp = n;
+   for (var i = 0; i < 254; i++) {
+       if (n_temp == 0) {
+          return i;
+       }
+       n_temp = n_temp \ 2;
+   }
+   return 254;
+}
+
 template Pad0(inLenMin, inLenMax, outLen, outLenBits) {
     assert((2 ** outLenBits) >= outLen);
     assert(inLenMax + 1 <= outLen);
@@ -194,7 +205,8 @@ template KeccakOrLiteralHex(maxInLen) {
     signal output out[64];
 
     var maxRounds = (maxInLen + 272) \ 272;
-    component pad = ReorderPad101Hex(0, maxInLen, maxRounds * 272, 252);
+    var outBits = log_ceil(maxRounds * 272);
+    component pad = ReorderPad101Hex(0, maxInLen, maxRounds * 272, outBits);
     for (var idx = 0; idx < maxInLen; idx++) {
 	pad.in[idx] <== in[idx];
     }
