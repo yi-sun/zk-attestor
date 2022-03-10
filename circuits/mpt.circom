@@ -144,6 +144,8 @@ template ExtensionCheck(maxKeyHexLen, maxNodeRefHexLen) {
 	hexChecks[idx] = Num2Bits(4);
 	hexChecks[idx].in <== nodeRlpHexs[idx];
     }
+
+    log(333111);
     
     // * [ignore] check validity of RLP encoding     
     // * [ignore] check validity of path prefix      
@@ -155,6 +157,8 @@ template ExtensionCheck(maxKeyHexLen, maxNodeRefHexLen) {
     extension_to_path.start <== 2 + nodeRlpLengthHexLen + 2 + nodePathRlpHexLen + nodePathPrefixHexLen;
     extension_to_path.end <== 2 + nodeRlpLengthHexLen + 2 + nodePathRlpHexLen + nodePathPrefixHexLen + nodePathHexLen;
 
+    log(333222);
+    
     component key_path_match = ArrayEq(maxKeyHexLen);
     for (var idx = 0; idx < maxKeyHexLen; idx++) {
 	key_path_match.a[idx] <== extension_to_path.out[idx];
@@ -162,6 +166,8 @@ template ExtensionCheck(maxKeyHexLen, maxNodeRefHexLen) {
     }
     key_path_match.inLen <== keyNibbleHexLen;
 
+    log(333333);
+    
     component key_path_len_match = IsEqual();
     key_path_len_match.in[0] <== keyNibbleHexLen;
     key_path_len_match.in[1] <== nodePathHexLen;
@@ -177,6 +183,8 @@ template ExtensionCheck(maxKeyHexLen, maxNodeRefHexLen) {
     extension_to_node_ref.start <== 2 + nodeRlpLengthHexLen + 2 + nodePathRlpHexLen + nodePathPrefixHexLen + nodePathHexLen + 2;
     extension_to_node_ref.end <== 2 + nodeRlpLengthHexLen + 2 + nodePathRlpHexLen + nodePathPrefixHexLen + nodePathHexLen + 2 + nodeRefExtHexLen;
 
+    log(333444);
+    
     component node_ref_match = ArrayEq(maxNodeRefHexLen);
     for (var idx = 0; idx < maxNodeRefHexLen; idx++) {
 	node_ref_match.a[idx] <== extension_to_node_ref.out[idx];
@@ -184,6 +192,8 @@ template ExtensionCheck(maxKeyHexLen, maxNodeRefHexLen) {
     }
     node_ref_match.inLen <== nodeRefHexLen;
 
+    log(333555);
+    
     component node_ref_len_match = IsEqual();
     node_ref_len_match.in[0] <== nodeRefHexLen;
     node_ref_len_match.in[1] <== nodeRefExtHexLen;
@@ -237,6 +247,8 @@ template BranchFixedKeyHexLen(maxNodeRefHexLen) {
 
     signal output out;
 
+    log(666);
+    
     // check input hexs are hexs
     component hexChecks[maxBranchRlpHexLen];
     for (var idx = 0; idx < maxBranchRlpHexLen; idx++) {
@@ -278,11 +290,20 @@ template BranchFixedKeyHexLen(maxNodeRefHexLen) {
     }
     node_ref_match.inLen <== nodeRefHexLen;
 
+    for (var idx = 0; idx < 5; idx++) {
+	log(node_ref_match.a[idx]);
+    }
+    for (var idx = 0; idx < 5; idx++) {
+	log(node_ref_match.b[idx]);
+    }
+
     component node_ref_len_match = IsEqual();
     node_ref_len_match.in[0] <== nodeRefHexLen;
     node_ref_len_match.in[1] <== nodeRefLenSelector.out[0];
 
-    log(666);
+    log(nodeRefHexLen);
+    log(nodeRefLenSelector.out[0]);
+    
     log(node_ref_match.out);
     log(node_ref_len_match.out);
 
@@ -600,7 +621,7 @@ template MPTInclusionFixedKeyHexLen(maxDepth, keyHexLen, maxValueHexLen) {
 	leafHash.in[idx] <== leafRlpHexs[idx];
     }
     leafHash.inLen <== 2 + leafRlpLengthHexLen + 2 + leafPathRlpHexLen + leafPathPrefixHexLen + leafPathHexLen + 2 + leafRlpValueLenHexLen + leafValueLenHexLen;
-
+    
     // hashes of nodes along path
     var maxNodeRlpHexLen = 1064;
     var maxRounds = (maxNodeRlpHexLen + 272) \ 272;
@@ -613,14 +634,27 @@ template MPTInclusionFixedKeyHexLen(maxDepth, keyHexLen, maxValueHexLen) {
 	nodeHashes[layer].inLen <== nodeTypes[layer] * (2 + nodeRlpLengthHexLen[layer] + 2 + nodePathRlpHexLen[layer] + nodePathPrefixHexLen[layer] + nodePathHexLen[layer] + 2 + nodeRefHexLen[layer][0] - (2 + nodeRlpLengthHexLen[layer] + 2 * 17 + nodeRefHexLen[layer][0] + nodeRefHexLen[layer][1] + nodeRefHexLen[layer][2] + nodeRefHexLen[layer][3] + nodeRefHexLen[layer][4] + nodeRefHexLen[layer][5] + nodeRefHexLen[layer][6] + nodeRefHexLen[layer][7] + nodeRefHexLen[layer][8] + nodeRefHexLen[layer][9] + nodeRefHexLen[layer][10] + nodeRefHexLen[layer][11] + nodeRefHexLen[layer][12] + nodeRefHexLen[layer][13] + nodeRefHexLen[layer][14] + nodeRefHexLen[layer][15])) + (2 + nodeRlpLengthHexLen[layer] + 2 * 17 + nodeRefHexLen[layer][0] + nodeRefHexLen[layer][1] + nodeRefHexLen[layer][2] + nodeRefHexLen[layer][3] + nodeRefHexLen[layer][4] + nodeRefHexLen[layer][5] + nodeRefHexLen[layer][6] + nodeRefHexLen[layer][7] + nodeRefHexLen[layer][8] + nodeRefHexLen[layer][9] + nodeRefHexLen[layer][10] + nodeRefHexLen[layer][11] + nodeRefHexLen[layer][12] + nodeRefHexLen[layer][13] + nodeRefHexLen[layer][14] + nodeRefHexLen[layer][15]);
     }
 
+    log(2222222222222222222);
+
+    for (var idx = 0; idx < 5; idx++) {
+	log(rootHashHexs[idx]);
+    }
+    for (var idx = 0; idx < 5; idx++) {
+	log(nodeHashes[0].out[idx]);
+    }
+    
     // check rootHash
-    component rootHashCheck = ArrayEq(64);
+    component rootHashCheck = ArrayEq(64);    
     for (var idx = 0; idx < 64; idx++) {
 	rootHashCheck.a[idx] <== rootHashHexs[idx];
 	rootHashCheck.b[idx] <== nodeHashes[0].out[idx];
     }
+    log(2221111);
+    
     rootHashCheck.inLen <== 64;
 
+    log(3333333333333333333333);
+    
     // compute key fragments
     // if branch: nibble is of size 1
     // if ext: nibble is of size nodePathHexLen[layer] unless nodePathHexLen[layer] == 0, in which case it is of size 1 (prefix len 1, path len 1)
@@ -724,6 +758,8 @@ template MPTInclusionFixedKeyHexLen(maxDepth, keyHexLen, maxValueHexLen) {
 	    exts[layer].nodeRlpHexs[idx] <== nodeRlpHexs[layer][idx];
 	}
     }
+
+    log(9999999);
 
     // constrain Branch: rlp([node_ref, ..., node_ref, b''])
     component branches[maxDepth - 1];

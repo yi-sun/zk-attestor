@@ -1,4 +1,4 @@
-pragma circom 2.0.1;
+pragma circom 2.0.2;
 
 include "../node_modules/circomlib/circuits/bitify.circom";
 include "../node_modules/circomlib/circuits/comparators.circom";
@@ -13,6 +13,12 @@ template SubArray(nIn, maxSelect, nInBits) {
     signal output out[maxSelect];
     signal output outLen;
 
+    log(88888);
+    log(nIn);
+    log(maxSelect);
+    log(start);
+    log(end);
+    
     component lt1 = LessEqThan(nInBits);
     lt1.in[0] <== start;
     lt1.in[1] <== end;
@@ -48,6 +54,10 @@ template ArrayEq(nIn) {
 
     signal output out;
 
+    log(77777);
+    log(nIn);
+    log(inLen);
+    
     component leq = LessEqThan(252);
     leq.in[0] <== inLen;
     leq.in[1] <== nIn;
@@ -68,9 +78,10 @@ template ArrayEq(nIn) {
         }
     }
 
-    component matchChooser = Multiplexer(1, nIn);
+    component matchChooser = Multiplexer(1, nIn + 1);
+    matchChooser.inp[0][0] <== 0;
     for (var idx = 0; idx < nIn; idx++) {
-        matchChooser.inp[idx][0] <== matchSum[idx];
+        matchChooser.inp[idx + 1][0] <== matchSum[idx];
     }
     matchChooser.sel <== inLen;
 

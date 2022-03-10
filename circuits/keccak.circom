@@ -32,6 +32,12 @@ template Pad0(inLenMin, inLenMax, outLen) {
     signal input inLen;
     signal output out[outLen];
 
+    log(55555555555);
+    log(inLenMin);
+    log(inLenMax);
+    log(outLen);
+    log(inLen);
+
     for (var idx = 0; idx < inLenMin; idx++) {
         out[idx] <== in[idx];
     }
@@ -55,20 +61,20 @@ template Pad0(inLenMin, inLenMax, outLen) {
     eq_sum_selector.sel <== inLen - inLenMin;
     eq_sum_selector.out[0] === inLen - inLenMin;
 
-    component zeros[inLenMax - inLenMin];
-    component zero_sum_selector = Multiplexer(1, inLenMax - inLenMin);
-    for (var idx = inLenMax - 1; idx >= inLenMin; idx--) {
+    component zeros[inLenMax - inLenMin + 1];
+    component zero_sum_selector = Multiplexer(1, inLenMax - inLenMin + 1);
+    for (var idx = inLenMax; idx >= inLenMin; idx--) {
         zeros[idx - inLenMin] = IsZero();
         zeros[idx - inLenMin].in <== out[idx];
 
-        if (idx == inLenMax - 1) {
+        if (idx == inLenMax) {
             zero_sum_selector.inp[idx - inLenMin][0] <== zeros[idx - inLenMin].out;
         } else {
             zero_sum_selector.inp[idx - inLenMin][0] <== zeros[idx - inLenMin].out + zero_sum_selector.inp[idx - inLenMin + 1][0];
         }
     }
     zero_sum_selector.sel <== inLen - inLenMin;
-    zero_sum_selector.out[0] === inLenMax - inLen;
+    zero_sum_selector.out[0] === inLenMax - inLen + 1;
 }
 
 template ReorderPad101Hex(inLenMin, inLenMax, outLen, outLenBits) {
@@ -79,6 +85,13 @@ template ReorderPad101Hex(inLenMin, inLenMax, outLen, outLenBits) {
     signal input inLen;
     signal output out[outLen];
 
+    log(4444444444444);
+    log(inLenMin);
+    log(inLenMax);
+    log(outLen);
+    log(outLenBits);
+    log(inLen);
+    
     signal inFlip[inLenMax];
     for (var idx = 0; idx < inLenMax \ 2; idx++) {
 	inFlip[2 * idx] <== in[2 * idx + 1];
@@ -221,12 +234,14 @@ template KeccakOrLiteralHex(maxInLen) {
 
     var maxRounds = (maxInLen + 272) \ 272;
     var outBits = log_ceil(maxRounds * 272);
+    log(1111111111111111111);
+    log(outBits);
     component pad = ReorderPad101Hex(0, maxInLen, maxRounds * 272, outBits);
     for (var idx = 0; idx < maxInLen; idx++) {
 	pad.in[idx] <== in[idx];
     }
     pad.inLen <== inLen;
-
+    
     signal hashRounds;
     signal roundRem;
     hashRounds <-- (inLen + 272) \ 272;

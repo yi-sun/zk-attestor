@@ -256,8 +256,8 @@ def get_storage_pf(punk_pfs, slot=None, max_depth=8, debug=False):
         if x['key'] == slot:
             punk_pf = x
     assert(punk_pf is not None)
-            
-    key = keccak256(punk_pf['key'][2:])
+
+    key = keccak256(punk_pf['key'])
     value = punk_pf['value'][2:]
     if len(value) % 2 == 1:
         value = '0' + value
