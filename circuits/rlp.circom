@@ -12,18 +12,6 @@ template SubArray(nIn, maxSelect, nInBits) {
 
     signal output out[maxSelect];
     signal output outLen;
-
-    log(333333300001);
-    log(nIn);
-    log(maxSelect);
-    log(nInBits);
-    
-    log(start);
-    log(end);
-
-    for (var idx = 0; idx < nIn; idx++) {
-	log(in[idx]);
-    }
     
     component lt1 = LessEqThan(nInBits);
     lt1.in[0] <== start;
@@ -41,15 +29,23 @@ template SubArray(nIn, maxSelect, nInBits) {
     lt3.out === 1;
 
     outLen <== end - start;
-    component selector = Multiplexer(maxSelect, nIn);
-    for (var idx = 0; idx < maxSelect; idx++) {
-        for (var i = 0; i < nIn; i++) {
-            selector.inp[i][idx] <== in[(i + idx) % nIn];
+
+    component n2b = Num2Bits(nInBits);
+    n2b.in <== start;
+
+    signal shifts[nInBits][nIn];
+    for (var idx = 0; idx < nInBits; idx++) {
+        for (var j = 0; j < nIn; j++) {
+            if (idx == 0) {
+                shifts[idx][j] <== n2b.out[idx] * (in[(j + (1 << idx)) % nIn] - in[j]) + in[j];
+            } else {
+                shifts[idx][j] <== n2b.out[idx] * (shifts[idx - 1][(j + (1 << idx)) % nIn] - shifts[idx - 1][j]) + shifts[idx - 1][j];            
+            }
         }
     }
-    selector.sel <== start;
+
     for (var idx = 0; idx < maxSelect; idx++) {
-        out[idx] <== selector.out[idx];
+        out[idx] <== shifts[nInBits - 1][idx];
     }
 
     log(outLen);

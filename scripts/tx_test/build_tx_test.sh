@@ -21,7 +21,7 @@ echo $PWD
 
 echo "****COMPILING CIRCUIT****"
 start=`date +%s`
-circom "$CIRCUIT_NAME".circom --r1cs --wasm --sym --c --wat --output "$BUILD_DIR"
+circom "$CIRCUIT_NAME".circom --r1cs --wasm --sym --wat --O1 --output "$BUILD_DIR"
 end=`date +%s`
 echo "DONE ($((end-start))s)"
 
