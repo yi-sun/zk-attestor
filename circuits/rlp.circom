@@ -13,11 +13,17 @@ template SubArray(nIn, maxSelect, nInBits) {
     signal output out[maxSelect];
     signal output outLen;
 
-    log(88888);
+    log(333333300001);
     log(nIn);
     log(maxSelect);
+    log(nInBits);
+    
     log(start);
     log(end);
+
+    for (var idx = 0; idx < nIn; idx++) {
+	log(in[idx]);
+    }
     
     component lt1 = LessEqThan(nInBits);
     lt1.in[0] <== start;
@@ -45,6 +51,11 @@ template SubArray(nIn, maxSelect, nInBits) {
     for (var idx = 0; idx < maxSelect; idx++) {
         out[idx] <== selector.out[idx];
     }
+
+    log(outLen);
+    for (var idx = 0; idx < maxSelect; idx++) {
+	log(out[idx]);
+    }
 }
 
 template ArrayEq(nIn) {
@@ -54,9 +65,16 @@ template ArrayEq(nIn) {
 
     signal output out;
 
-    log(77777);
+    log(333333300002);
     log(nIn);
     log(inLen);
+
+    for (var idx = 0; idx < nIn; idx++) {
+	log(a[idx]);
+    }
+    for (var idx = 0; idx < nIn; idx++) {
+	log(b[idx]);
+    }    
     
     component leq = LessEqThan(252);
     leq.in[0] <== inLen;
@@ -90,4 +108,6 @@ template ArrayEq(nIn) {
     matchCheck.in[1] <== inLen;
 
     out <== matchCheck.out;
+
+    log(out);
 }

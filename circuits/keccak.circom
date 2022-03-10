@@ -32,12 +32,15 @@ template Pad0(inLenMin, inLenMax, outLen) {
     signal input inLen;
     signal output out[outLen];
 
-    log(55555555555);
+    log(222222200001);
     log(inLenMin);
     log(inLenMax);
     log(outLen);
     log(inLen);
-
+    for (var idx = 0; idx < inLenMax; idx++) {
+	log(in[idx]);
+    }
+    
     for (var idx = 0; idx < inLenMin; idx++) {
         out[idx] <== in[idx];
     }
@@ -75,6 +78,10 @@ template Pad0(inLenMin, inLenMax, outLen) {
     }
     zero_sum_selector.sel <== inLen - inLenMin;
     zero_sum_selector.out[0] === inLenMax - inLen + 1;
+
+    for (var idx = 0; idx < outLen; idx++) {
+	log(out[idx]);
+    }
 }
 
 template ReorderPad101Hex(inLenMin, inLenMax, outLen, outLenBits) {
@@ -85,12 +92,16 @@ template ReorderPad101Hex(inLenMin, inLenMax, outLen, outLenBits) {
     signal input inLen;
     signal output out[outLen];
 
-    log(4444444444444);
+    log(222222200002);
     log(inLenMin);
     log(inLenMax);
     log(outLen);
     log(outLenBits);
     log(inLen);
+
+    for (var idx = 0; idx < inLenMax; idx++) {
+	log(in[idx]);
+    }
     
     signal inFlip[inLenMax];
     for (var idx = 0; idx < inLenMax \ 2; idx++) {
@@ -144,6 +155,10 @@ template ReorderPad101Hex(inLenMin, inLenMax, outLen, outLenBits) {
     for (var idx = (minRounds - 1) * 272; idx < maxRounds * 272; idx++) {
 	out[idx] <== pad0.out[idx] + padHex[idx - (minRounds - 1) * 272];
     }
+
+    for (var idx = 0; idx < outLen; idx++) {
+	log(out[idx]);
+    }
 }
 
 template Keccak256UpdateHex() {
@@ -153,6 +168,14 @@ template Keccak256UpdateHex() {
 
     signal output out[25 * 64];
 
+    log(222222200003);
+    for (var idx = 0; idx < 272; idx++) {
+	log(inHex[idx]);
+    }
+    for (var idx = 0; idx < 25 * 64; idx++) {
+	log(sBits[idx]);
+    }
+    
     component n2b[272];
     for (var idx = 0; idx < 272; idx++) {
 	n2b[idx] = Num2Bits(4);
@@ -170,7 +193,11 @@ template Keccak256UpdateHex() {
     }
     for (var idx = 0; idx < 1600; idx++) {
 	out[idx] <== abs.out[idx];
-    }    
+    }
+
+    for (var idx = 0; idx < 25 * 64; idx++) {
+	log(out[idx]);
+    }
 }
 
 template Keccak256Hex(maxRounds) {
@@ -180,6 +207,13 @@ template Keccak256Hex(maxRounds) {
     // out in bits
     signal output out[256];
 
+    log(222222200004);
+    log(maxRounds);
+    log(rounds);
+    for (var idx = 0; idx < maxRounds * 272; idx++) {
+	log(inPaddedHex[idx]);
+    }
+    
     component roundCheck = LessEqThan(252);
     roundCheck.in[0] <== rounds;
     roundCheck.in[1] <== maxRounds;
@@ -222,6 +256,10 @@ template Keccak256Hex(maxRounds) {
     for (var idx = 0; idx < 256; idx++) {
 	out[idx] <== squeeze.out[idx];
     }
+
+    for (var idx = 0; idx < 256; idx++) {
+	log(out[idx]);
+    }
 }
 
 template KeccakOrLiteralHex(maxInLen) {
@@ -234,8 +272,14 @@ template KeccakOrLiteralHex(maxInLen) {
 
     var maxRounds = (maxInLen + 272) \ 272;
     var outBits = log_ceil(maxRounds * 272);
-    log(1111111111111111111);
-    log(outBits);
+
+    log(222222200005);
+    log(maxInLen);
+    log(inLen);
+    for (var idx = 0; idx < maxInLen; idx++) {
+	log(in[idx]);
+    }
+
     component pad = ReorderPad101Hex(0, maxInLen, maxRounds * 272, outBits);
     for (var idx = 0; idx < maxInLen; idx++) {
 	pad.in[idx] <== in[idx];
@@ -283,4 +327,9 @@ template KeccakOrLiteralHex(maxInLen) {
     }
 
     outLen <== isShort.out * (inLen - 64) + 64;
+
+    log(outLen);
+    for (var idx = 0; idx < 64; idx++) {
+	log(out[idx]);
+    }
 }
