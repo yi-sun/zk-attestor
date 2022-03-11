@@ -16,6 +16,7 @@ function max(a, b) {
 
 template LeafCheck(maxKeyHexLen, maxValueHexLen) {
     var maxLeafRlpHexLen = 4 + (maxKeyHexLen + 2) + 4 + maxValueHexLen;
+    var LEAF_BITS = log_ceil(maxLeafRlpHexLen);
 
     // FIXME: Differentiate between cases where keyLen is 0 and where the prefix+nibble is '1b'
     signal input keyNibbleHexLen;
@@ -74,7 +75,7 @@ template LeafCheck(maxKeyHexLen, maxValueHexLen) {
     // * [ignore] check validity of path prefix
     
     // * check path matches keyNibbles
-    component leaf_to_path = SubArray(maxLeafRlpHexLen, maxKeyHexLen, 252);
+    component leaf_to_path = SubArray(maxLeafRlpHexLen, maxKeyHexLen, LEAF_BITS);
     for (var idx = 0; idx < maxLeafRlpHexLen; idx++) {
 	leaf_to_path.in[idx] <== leafRlpHexs[idx];
     }
@@ -96,7 +97,7 @@ template LeafCheck(maxKeyHexLen, maxValueHexLen) {
     key_path <== key_path_len_match.out * key_path_match.out;
     
     // * check value matches valueBits
-    component leaf_to_value = SubArray(maxLeafRlpHexLen, maxValueHexLen, 252);
+    component leaf_to_value = SubArray(maxLeafRlpHexLen, maxValueHexLen, LEAF_BITS);
     for (var idx = 0; idx < maxLeafRlpHexLen; idx++) {
 	leaf_to_value.in[idx] <== leafRlpHexs[idx];
     }
@@ -120,6 +121,7 @@ template LeafCheck(maxKeyHexLen, maxValueHexLen) {
 
 template ExtensionCheck(maxKeyHexLen, maxNodeRefHexLen) {
     var maxExtensionRlpHexLen = 4 + 2 + maxKeyHexLen + 2 + maxNodeRefHexLen;
+    var EXTENSION_BITS = log_ceil(maxExtensionRlpHexLen);
 
     signal input keyNibbleHexLen;
     signal input keyNibbleHexs[maxKeyHexLen];
@@ -176,7 +178,7 @@ template ExtensionCheck(maxKeyHexLen, maxNodeRefHexLen) {
     // * [ignore] check validity of RLP encoding     
     // * [ignore] check validity of path prefix      
     // * check path contains nibbles of key
-    component extension_to_path = SubArray(maxExtensionRlpHexLen, maxKeyHexLen, 252);
+    component extension_to_path = SubArray(maxExtensionRlpHexLen, maxKeyHexLen, EXTENSION_BITS);
     for (var idx = 0; idx < maxExtensionRlpHexLen; idx++) {
 	extension_to_path.in[idx] <== nodeRlpHexs[idx];
     }
@@ -198,7 +200,7 @@ template ExtensionCheck(maxKeyHexLen, maxNodeRefHexLen) {
     key_path <== key_path_len_match.out * key_path_match.out;
     
     // * check node_ref matches child
-    component extension_to_node_ref = SubArray(maxExtensionRlpHexLen, maxNodeRefHexLen, 252);
+    component extension_to_node_ref = SubArray(maxExtensionRlpHexLen, maxNodeRefHexLen, EXTENSION_BITS);
     for (var idx = 0; idx < maxExtensionRlpHexLen; idx++) {
 	extension_to_node_ref.in[idx] <== nodeRlpHexs[idx];
     }
@@ -229,6 +231,7 @@ template ExtensionCheck(maxKeyHexLen, maxNodeRefHexLen) {
 
 template BranchFixedKeyHexLen(maxNodeRefHexLen) {
     var maxBranchRlpHexLen = 1064;
+    var BRANCH_BITS = 11;
 
     signal input keyNibble;
 
@@ -293,7 +296,7 @@ template BranchFixedKeyHexLen(maxNodeRefHexLen) {
     nodeRefLenSelector.sel <== keyNibble;
 
     // find the node_ref at the index of nibble
-    component branch_to_node_ref = SubArray(maxBranchRlpHexLen, maxNodeRefHexLen, 252);
+    component branch_to_node_ref = SubArray(maxBranchRlpHexLen, maxNodeRefHexLen, BRANCH_BITS);
     for (var idx = 0; idx < maxBranchRlpHexLen; idx++) {
 	branch_to_node_ref.in[idx] <== nodeRlpHexs[idx];
     }
@@ -320,6 +323,7 @@ template BranchFixedKeyHexLen(maxNodeRefHexLen) {
 
 template EmptyTerminalBranchCheck(maxNodeRefHexLen, maxValueHexLen) {
     var maxBranchRlpHexLen = 1064;
+    var BRANCH_BITS = 11;
     
     signal input keyNibble;
 
@@ -393,7 +397,7 @@ template EmptyTerminalBranchCheck(maxNodeRefHexLen, maxValueHexLen) {
     nodeRefLenSelector.sel <== keyNibble;
 
     // find the node_ref at the index of nibble / value
-    component branch_to_node_ref = SubArray(maxBranchRlpHexLen, maxNodeRefHexLen, 252);
+    component branch_to_node_ref = SubArray(maxBranchRlpHexLen, maxNodeRefHexLen, BRANCH_BITS);
     for (var idx = 0; idx < maxBranchRlpHexLen; idx++) {
 	branch_to_node_ref.in[idx] <== nodeRlpHexs[idx];
     }
@@ -420,6 +424,7 @@ template EmptyTerminalBranchCheck(maxNodeRefHexLen, maxValueHexLen) {
 
 template NonTerminalBranchCheck(maxNodeRefHexLen, maxValueHexLen) {
     var maxBranchRlpHexLen = 1064 + 2 + maxValueHexLen;
+    var BRANCH_BITS = log_ceil(maxBranchRlpHexLen);
     
     signal input keyNibble;
 
@@ -499,7 +504,7 @@ template NonTerminalBranchCheck(maxNodeRefHexLen, maxValueHexLen) {
     nodeRefLenSelector.sel <== keyNibble;
 
     // find the node_ref at the index of nibble / value
-    component branch_to_node_ref = SubArray(maxBranchRlpHexLen, maxNodeRefHexLen, 252);
+    component branch_to_node_ref = SubArray(maxBranchRlpHexLen, maxNodeRefHexLen, BRANCH_BITS);
     for (var idx = 0; idx < maxBranchRlpHexLen; idx++) {
 	branch_to_node_ref.in[idx] <== nodeRlpHexs[idx];
     }
@@ -526,6 +531,7 @@ template NonTerminalBranchCheck(maxNodeRefHexLen, maxValueHexLen) {
 
 template TerminalBranchCheck(maxNodeRefHexLen, maxValueHexLen) {
     var maxBranchRlpHexLen = 1064 + 2 + maxValueHexLen;
+    var BRANCH_BITS = log_ceil(maxBranchRlpHexLen);
 
     signal input valueHexLen;
     signal input valueHexs[maxValueHexLen];
@@ -592,7 +598,7 @@ template TerminalBranchCheck(maxNodeRefHexLen, maxValueHexLen) {
     valueStartHexIdx <== 2 + nodeRlpLengthHexLen + 2 + 2 * 16 + nodeValueLenHexLen[0] + nodeValueLenHexLen[1] + nodeValueLenHexLen[2] + nodeValueLenHexLen[3] + nodeValueLenHexLen[4] + nodeValueLenHexLen[5] + nodeValueLenHexLen[6] + nodeValueLenHexLen[7] + nodeValueLenHexLen[8] + nodeValueLenHexLen[9] + nodeValueLenHexLen[10] + nodeValueLenHexLen[11] + nodeValueLenHexLen[12] + nodeValueLenHexLen[13] + nodeValueLenHexLen[14] + nodeValueLenHexLen[15] + nodeVtRlpLenHexLen;
 
     // check vt matches value
-    component branch_to_value = SubArray(maxBranchRlpHexLen, maxValueHexLen, 252);
+    component branch_to_value = SubArray(maxBranchRlpHexLen, maxValueHexLen, BRANCH_BITS);
     for (var idx = 0; idx < maxBranchRlpHexLen; idx++) {
 	branch_to_value.in[idx] <== nodeRlpHexs[idx];
     }
@@ -624,6 +630,8 @@ template MPTInclusionFixedKeyHexLen(maxDepth, keyHexLen, maxValueHexLen) {
     var maxLeafRlpHexLen = 4 + (keyHexLen + 2) + 4 + maxValueHexLen;
     var maxBranchRlpHexLen = 1064;
     var maxExtensionRlpHexLen = 4 + 2 + keyHexLen + 2 + 64;
+
+    var KEY_BITS = log_ceil(keyHexLen);
     
     signal input keyHexs[keyHexLen];
     signal input valueHexs[maxValueHexLen];
@@ -742,7 +750,7 @@ template MPTInclusionFixedKeyHexLen(maxDepth, keyHexLen, maxValueHexLen) {
     }
     leafStartSelector.sel <== depth - 1;
 	
-    component leafSelector = SubArray(keyHexLen, keyHexLen, 252);
+    component leafSelector = SubArray(keyHexLen, keyHexLen, KEY_BITS);
     for (var idx = 0; idx < keyHexLen; idx++) {
 	leafSelector.in[idx] <== keyHexs[idx];
     }
@@ -780,7 +788,7 @@ template MPTInclusionFixedKeyHexLen(maxDepth, keyHexLen, maxValueHexLen) {
     for (var layer = 0; layer < maxDepth - 1; layer++) {
 	exts[layer] = ExtensionCheck(keyHexLen, 64);
 	
-	extKeySelectors[layer] = SubArray(keyHexLen, keyHexLen, 252);
+	extKeySelectors[layer] = SubArray(keyHexLen, keyHexLen, KEY_BITS);
 	for (var idx = 0; idx < keyHexLen; idx++) {
 	    extKeySelectors[layer].in[idx] <== keyHexs[idx];
 	}
@@ -878,6 +886,8 @@ template MPTInclusion(maxDepth, maxKeyHexLen, maxValueHexLen) {
     var maxNodeRefHexLen = 64;
     var maxExtensionRlpHexLen = 4 + 2 + maxKeyHexLen + 2 + maxNodeRefHexLen;
 
+    var KEY_BITS = log_ceil(maxKeyHexLen);
+    
     signal input keyHexLen;
     signal input keyHexs[maxKeyHexLen];
 
@@ -1018,7 +1028,7 @@ template MPTInclusion(maxDepth, maxKeyHexLen, maxValueHexLen) {
     }
     leafStartSelector.sel <== depth - 1;
 
-    component leafSelector = SubArray(maxKeyHexLen, maxKeyHexLen, 252);
+    component leafSelector = SubArray(maxKeyHexLen, maxKeyHexLen, KEY_BITS);
     for (var idx = 0; idx < maxKeyHexLen; idx++) {
 	leafSelector.in[idx] <== keyHexs[idx];
     }
@@ -1072,7 +1082,7 @@ template MPTInclusion(maxDepth, maxKeyHexLen, maxValueHexLen) {
     for (var layer = 0; layer < maxDepth - 1; layer++) {
 	exts[layer] = ExtensionCheck(maxKeyHexLen, 64);
 	
-	extKeySelectors[layer] = SubArray(maxKeyHexLen, maxKeyHexLen, 252);
+	extKeySelectors[layer] = SubArray(maxKeyHexLen, maxKeyHexLen, KEY_BITS);
 	for (var idx = 0; idx < maxKeyHexLen; idx++) {
 	    extKeySelectors[layer].in[idx] <== keyHexs[idx];
 	}
@@ -1173,6 +1183,8 @@ template MPTInclusionNoBranchTermination(maxDepth, maxKeyHexLen, maxValueHexLen)
     var maxNodeRefHexLen = 64;
     var maxExtensionRlpHexLen = 4 + 2 + maxKeyHexLen + 2 + maxNodeRefHexLen;
 
+    var KEY_BITS = log_ceil(maxKeyHexLen);
+    
     signal input keyHexLen;
     signal input keyHexs[maxKeyHexLen];
 
@@ -1289,7 +1301,7 @@ template MPTInclusionNoBranchTermination(maxDepth, maxKeyHexLen, maxValueHexLen)
     }
     leafStartSelector.sel <== depth - 1;
 
-    component leafSelector = SubArray(maxKeyHexLen, maxKeyHexLen, 252);
+    component leafSelector = SubArray(maxKeyHexLen, maxKeyHexLen, KEY_BITS);
     for (var idx = 0; idx < maxKeyHexLen; idx++) {
 	leafSelector.in[idx] <== keyHexs[idx];
     }
@@ -1327,7 +1339,7 @@ template MPTInclusionNoBranchTermination(maxDepth, maxKeyHexLen, maxValueHexLen)
     for (var layer = 0; layer < maxDepth - 1; layer++) {
 	exts[layer] = ExtensionCheck(maxKeyHexLen, 64);
 	
-	extKeySelectors[layer] = SubArray(maxKeyHexLen, maxKeyHexLen, 252);
+	extKeySelectors[layer] = SubArray(maxKeyHexLen, maxKeyHexLen, KEY_BITS);
 	for (var idx = 0; idx < maxKeyHexLen; idx++) {
 	    extKeySelectors[layer].in[idx] <== keyHexs[idx];
 	}
