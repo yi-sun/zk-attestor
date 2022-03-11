@@ -12,6 +12,18 @@ template SubArray(nIn, maxSelect, nInBits) {
 
     signal output out[maxSelect];
     signal output outLen;
+
+    log(333333300001);
+    log(nIn);
+    log(maxSelect);
+    log(nInBits);
+    
+    log(start);
+    log(end);
+
+    for (var idx = 0; idx < nIn; idx++) {
+	log(in[idx]);
+    }
     
     component lt1 = LessEqThan(nInBits);
     lt1.in[0] <== start;
