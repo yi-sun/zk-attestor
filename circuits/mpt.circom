@@ -1246,6 +1246,7 @@ template MPTInclusionNoBranchTermination(maxDepth, maxKeyHexLen, maxValueHexLen)
     log(maxDepth);
     log(maxKeyHexLen);
     log(maxValueHexLen);
+    log(depth);
     
     component depthCheck = LessEqThan(10);
     depthCheck.in[0] <== depth;
@@ -1292,9 +1293,6 @@ template MPTInclusionNoBranchTermination(maxDepth, maxKeyHexLen, maxValueHexLen)
     }
     rootHashCheck.inLen <== 64;
 
-    // constrain Leaf: rlp([prefix (20 or 3) | path, value])    
-    component leaf = LeafCheck(maxKeyHexLen, maxValueHexLen);
-
     component leafStartSelector = Multiplexer(1, maxDepth);
     for (var idx = 0; idx < maxDepth; idx++) {
 	leafStartSelector.inp[idx][0] <== start[idx];
@@ -1307,6 +1305,9 @@ template MPTInclusionNoBranchTermination(maxDepth, maxKeyHexLen, maxValueHexLen)
     }
     leafSelector.start <== leafStartSelector.out[0];
     leafSelector.end <== keyHexLen;
+
+    // constrain Leaf: rlp([prefix (20 or 3) | path, value])    
+    component leaf = LeafCheck(maxKeyHexLen, maxValueHexLen);
 
     leaf.keyNibbleHexLen <== leafSelector.outLen;
     for (var idx = 0; idx < maxKeyHexLen; idx++) {

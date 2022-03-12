@@ -66,7 +66,7 @@ def get_mpt_proof(storage, proof, node, path):
 def gen_proof_input(proof, root, key, value, maxDepth, maxKeyHexLen, maxValueHexLen, debug=False):
     maxNodeRefLen = 64
     maxLeafRlpHexLen = 4 + (maxKeyHexLen + 2) + 4 + maxValueHexLen
-    maxBranchRlpHexLen = 1064 + 2 + maxValueHexLen
+    maxBranchRlpHexLen = 1064
     maxExtensionRlpHexLen = 4 + 2 + maxKeyHexLen + 2 + maxNodeRefLen
 
     keyHexLen = 0
@@ -351,6 +351,7 @@ def gen_proof_input(proof, root, key, value, maxDepth, maxKeyHexLen, maxValueHex
 
     ret = {"keyHexLen": keyHexLen,
            "keyHexs": keyHexs,
+           
            "valueHexLen": valueHexLen,
            "valueHexs": valueHexs, 
            "rootHashHexs": rootHashHexs,
@@ -363,25 +364,15 @@ def gen_proof_input(proof, root, key, value, maxDepth, maxKeyHexLen, maxValueHex
            "leafValueLenHexLen": leafValueLenHexLen, 
            "leafRlpHexs": leafRlpHexs, 
     
-           "terminalBranchRlpLengthHexLen": terminalBranchRlpLengthHexLen, 
-           "terminalBranchNodeRefHexLen": terminalBranchNodeRefHexLen, 
-           "terminalBranchVtRlpLenHexLen": terminalBranchVtRlpLenHexLen, 
-           "terminalBranchVtValueHexLen": terminalBranchVtValueHexLen, 
-
-           "terminalBranchRlpHexs": terminalBranchRlpHexs, 
-           
            "nodeRlpLengthHexLen": nodeRlpLengthHexLen, 
            "nodePathRlpHexLen": nodePathRlpHexLen, 
            "nodePathPrefixHexLen": nodePathPrefixHexLen, 
            "nodePathHexLen": nodePathHexLen, 
            "nodeRefHexLen": nodeRefHexLen, 
-           "nodeVtRlpLenHexLen": nodeVtRlpLenHexLen, 
-           "nodeVtValueHexLen": nodeVtValueHexLen, 
            
            "nodeRlpHexs": nodeRlpHexs, 
            
            "nodeTypes": nodeTypes,
-           "isTerminalBranch": isTerminalBranch,
            "depth": depth }
     return ret
 

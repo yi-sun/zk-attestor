@@ -20,6 +20,7 @@ TAG_TO_NAME = {
     333333300001: 'SubArray',
     33333330001: 'SubArray',
     333333300002: 'ArrayEq',
+    444444400001: 'Multiplexer'
 }
 
 def parse_next(lines, idx):
@@ -31,6 +32,7 @@ def parse_next(lines, idx):
         name = TAG_TO_NAME[int(lines[idx][:-2])]
         log, idx = parse_one(lines, idx)
         logs.append(log)
+#        print(pprint.pformat(log, width=100, compact=True, depth=1))
     return logs, idx
 
 def parse_one(lines, idx):
@@ -391,7 +393,8 @@ def parse_one(lines, idx):
         log["maxDepth"] = int(lines[idx][:-2])
         log["maxKeyHexLen"] = int(lines[idx + 1][:-2])
         log["maxValueHexLen"] = int(lines[idx + 2][:-2])
-        idx = idx + 3
+        log["depth"] = int(lines[idx + 3][:-2])
+        idx = idx + 4
 
         log["inner_logs"], idx = parse_next(lines, idx)
         
@@ -400,6 +403,25 @@ def parse_one(lines, idx):
         log["checksPassed"] = []
         for idx2 in range(log["maxDepth"]):
             log["checksPassed"].append(int(lines[idx][:-2]))
+            idx = idx + 1
+    elif tag == 444444400001:
+        log["wIn"] = int(lines[idx][:-2])
+        log["nIn"] = int(lines[idx + 1][:-2])
+        log["sel"] = int(lines[idx + 2][:-2])
+        idx = idx + 3
+
+        log["inp"] = []
+        for i in range(log["nIn"]):
+            log["inp"].append([])
+            for j in range(log["wIn"]):
+                log["inp"][-1].append(int(lines[idx][:-2]))
+                idx = idx + 1
+                
+        log["inner_logs"], idx = parse_next(lines, idx)
+
+        log["out"] = []
+        for j in range(log["wIn"]):
+            log["out"].append(int(lines[idx][:-2]))
             idx = idx + 1
     else:
         print('Missing tag:', tag)
