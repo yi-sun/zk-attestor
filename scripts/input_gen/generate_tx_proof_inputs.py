@@ -412,6 +412,16 @@ def get_raw_tx(tx):
         assert('type not handled: {}'.format(tx['type']))
     return raw_tx
 
+def get_tx_rlp(tx):
+    if tx['type'] == '0x0':
+        raw_tx = get_raw_tx(tx)
+        return rlp.encode(raw_tx)
+    elif tx['type'] == '0x2':
+        raw_tx = get_raw_tx(tx)
+        return bytearray.fromhex('02') + rlp.encode(raw_tx)        
+    else:
+        print('type not handled: {}'.format(tx['type']))
+
 def get_pf(block, tx_idx, max_depth=None, max_key_len=64, max_val_len=234, debug=False):
     block = block['result']
     block_hash = block['hash']
@@ -476,7 +486,7 @@ def main():
         block = json.loads(f.read())
 
     pf = get_pf(block, args.tx_idx, max_depth=args.max_depth, max_key_len=args.max_key_len, max_val_len=args.max_val_len, debug=args.debug)
-    print('tx_idx: {:3} depth: {:3} key_len: {:6} val_len: {:5}'.format(args.tx_idx, pf['depth'], len(rlp.encode(args.tx_idx).hex()), len(rlp.encode(get_raw_tx(block['result']['transactions'][args.tx_idx])).hex())))
+    print('tx_idx: {:3} depth: {:3} key_len: {:6} val_len: {:5}'.format(args.tx_idx, pf['depth'], len(rlp.encode(args.tx_idx).hex()), len(get_tx_rlp(block['result']['transactions'][args.tx_idx]).hex())))
           
     pf_str = pprint.pformat(pf, width=100, compact=True).replace("'", '"')
     with open(args.file_str, 'w') as f:
