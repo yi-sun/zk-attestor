@@ -7,6 +7,6 @@ component main {public [
     nodeRefHexLen,
     nodeRefHexs,
     nodeRlpLengthHexLen,
-    nodeValueLenHexLen,
+    nodeValueHexLen,
     nodeRlpHexs
-]} = BranchFixedKeyHexLen(64);
+]} = EmptyVtBranchCheck(64);

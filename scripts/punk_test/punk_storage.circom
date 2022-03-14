@@ -7,18 +7,18 @@ component main {public [
     valueHexs,
     rootHashHexs,
     leafRlpLengthHexLen,
-    leafPathRlpHexLen,
+    leafPathRlpLengthHexLen,
     leafPathPrefixHexLen,
     leafPathHexLen,
-    leafRlpValueLenHexLen,
-    leafValueLenHexLen,
+    leafValueRlpLengthHexLen,
+    leafValueHexLen,
     leafRlpHexs,
     nodeRlpLengthHexLen,    
-    nodePathRlpHexLen,
+    nodePathRlpLengthHexLen,
     nodePathPrefixHexLen,
     nodePathHexLen,    
     nodeRefHexLen,
     nodeRlpHexs,
     nodeTypes,
     depth
-]} = MPTInclusionFixedKeyHexLen(8, 64, 114);
+]} = MPTInclusionFixedKeyHexLen(8, 64, 66);

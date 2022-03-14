@@ -7,10 +7,10 @@ component main {public [
     keyNibbleHexs,
     valueHexs,
     leafRlpLengthHexLen,
-    leafPathRlpHexLen,
+    leafPathRlpLengthHexLen,
     leafPathPrefixHexLen,
     leafPathHexLen,
-    leafRlpValueLenHexLen,
-    leafValueLenHexLen,
+    leafValueRlpLengthHexLen,
+    leafValueHexLen,
     leafRlpHexs
 ]} = LeafCheck(64, 66);

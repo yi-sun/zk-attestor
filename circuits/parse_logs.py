@@ -6,7 +6,7 @@ TAG_TO_NAME = {
     111111100001: 'LeafCheck',
     111111100002: 'ExtensionCheck',
     111111100003: 'BranchFixedKeyHexLen',
-    111111100004: 'EmptyTerminalBranchCheck',
+    111111100004: 'EmptyVtBranchCheck',
     111111100005: 'NonTerminalBranchCheck',
     111111100006: 'TerminalBranchCheck',
     111111100007: 'MPTInclusionFixedKeyHexLen',
@@ -272,13 +272,12 @@ def parse_one(lines, idx):
         idx = idx + 3
     elif tag == 111111100004:
         log["maxNodeRefHexLen"] = int(lines[idx][:-2])
-        log["maxValueHexLen"] = int(lines[idx + 1][:-2])
 
-        log["keyNibble"] = int(lines[idx + 2][:-2])
-        log["nodeRefHexLen"] = int(lines[idx + 3][:-2])
-        log["nodeRlpLengthHexLen"] = int(lines[idx + 4][:-2])
-        log["maxBranchRlpHexLen"] = int(lines[idx + 5][:-2])
-        idx = idx + 6
+        log["keyNibble"] = int(lines[idx + 1][:-2])
+        log["nodeRefHexLen"] = int(lines[idx + 2][:-2])
+        log["nodeRlpLengthHexLen"] = int(lines[idx + 3][:-2])
+        log["maxBranchRlpHexLen"] = int(lines[idx + 4][:-2])
+        idx = idx + 5
 
         log["nodeRefHexs"] = []
         log["nodeValueLenHexLenHexs"] = []

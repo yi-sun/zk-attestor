@@ -9,18 +9,18 @@ component main {public [
     valueHexs,
     rootHashHexs,
     leafRlpLengthHexLen,
-    leafPathRlpHexLen,
+    leafPathRlpLengthHexLen,
     leafPathPrefixHexLen,
     leafPathHexLen,
-    leafRlpValueLenHexLen,
-    leafValueLenHexLen,
+    leafValueRlpLengthHexLen,
+    leafValueHexLen,
     leafRlpHexs,
     nodeRlpLengthHexLen,    
-    nodePathRlpHexLen,
+    nodePathRlpLengthHexLen,
     nodePathPrefixHexLen,
     nodePathHexLen,    
     nodeRefHexLen,
     nodeRlpHexs,
     nodeTypes,
     depth
-]} = MPTInclusionNoBranchTermination(5, 6, 6078);
+]} = MPTInclusionNoBranchTermination(5, 6, 6080);

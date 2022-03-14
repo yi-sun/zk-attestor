@@ -85,20 +85,67 @@ template EthBlockHashHex() {
     }    
 }
 
-template EthStorageProof(depth) {
+template EthStorageProof(maxDepth) {
     signal input storageRootHexs[64];
 
-    // uint256
-    signal input slotHexLen;
-    signal input slotHexs[64];
-    
-    signal input valueRlpHexLen;
+    signal input slotHashHexs[64];
     signal input valueRlpHexs[66];
-
+    signal input storageRootHexs[64];
+    
+    signal input leafRlpLengthHexLen;
+    signal input leafPathRlpHexLen;
+    signal input leafPathPrefixHexLen;
+    signal input leafPathHexLen;
+    signal input leafRlpValueLenHexLen;
+    signal input leafValueLenHexLen;
+    signal input leafRlpHexs[maxLeafRlpHexLen];
+    
+    signal input nodeRlpLengthHexLen[maxDepth - 1];    
+    signal input nodePathRlpHexLen[maxDepth - 1];
+    signal input nodePathPrefixHexLen[maxDepth - 1];
+    signal input nodePathHexLen[maxDepth - 1];    
+    signal input nodeRefHexLen[maxDepth - 1][16]; 
+    signal input nodeRlpHexs[maxDepth - 1][maxBranchRlpHexLen];
+    
+    signal input nodeTypes[maxDepth - 1];
+    signal input depth;  
+    
     signal output out;
+
+    component mpt_proof = MPTInclusionFixedKeyHexLen(maxDepth, 64, 66);
+
+    for (var idx = 0; idx < 64; idx++) {
+	keyHexs[idx] <== slotHashHexs[idx];	
+    }
+    for (var idx = 0; idx < 66; idx++) {
+	valueHexs[idx] <== valueRlpHexs[idx];	
+    }
+    for (var idx = 0; idx < 64; idx++) {
+	rootHashHexs[idx] <== storageRootHexs[idx];	
+    }
+    
+    signal input leafRlpLengthHexLen;
+    signal input leafPathRlpHexLen;
+    signal input leafPathPrefixHexLen;
+    signal input leafPathHexLen;
+    signal input leafRlpValueLenHexLen;
+    signal input leafValueLenHexLen;
+    signal input leafRlpHexs[maxLeafRlpHexLen];
+    
+    signal input nodeRlpLengthHexLen[maxDepth - 1];    
+    signal input nodePathRlpHexLen[maxDepth - 1];
+    signal input nodePathPrefixHexLen[maxDepth - 1];
+    signal input nodePathHexLen[maxDepth - 1];    
+    signal input nodeRefHexLen[maxDepth - 1][16]; 
+    signal input nodeRlpHexs[maxDepth - 1][maxBranchRlpHexLen];
+    
+    signal input nodeTypes[maxDepth - 1];
+    signal input depth;  
+    
+    out <== mpt_proof.out;    
 }
 
-template EthAddressProof(depth) {
+template EthAddressProof(maxDepth) {
     signal input stateRootHexs[64];
 
     signal input addressHexs[40];
@@ -108,7 +155,7 @@ template EthAddressProof(depth) {
     signal output out;
 }
 
-template EthAddressStorageProof(addressDepth, storageDepth) {
+template EthAddressStorageProof(addressMaxDepth, storageMaxDepth) {
     signal input blockHashHexs[64];
 
     signal input rlpPrefixHexs[6];
@@ -141,7 +188,7 @@ template EthAddressStorageProof(addressDepth, storageDepth) {
     signal output out;
 }
 
-template EthTransactionProof(txMaxDepth) {
+template EthTransactionProof(maxDepth) {
 
 
 }

@@ -38,16 +38,16 @@ def gen_proof_input(proof, root, key, value, maxValueHexLen, maxDepth=None, debu
     
     leafRlpLengthHexLen = 0
     
-    leafPathRlpHexLen = 0
+    leafPathRlpLengthHexLen = 0
     leafPathPrefixHexLen = 2
     leafPathHexLen = 60
     
-    leafRlpValueLenHexLen = 2
-    leafValueLenHexLen = 4
+    leafValueRlpLengthHexLen = 2
+    leafValueHexLen = 4
     leafRlpHexs = []
     
     nodeRlpLengthHexLen = []
-    nodePathRlpHexLen = []
+    nodePathRlpLengthHexLen = []
     nodePathPrefixHexLen = []
     nodePathHexLen = []
     nodeRefHexLen = []
@@ -77,12 +77,12 @@ def gen_proof_input(proof, root, key, value, maxValueHexLen, maxDepth=None, debu
             path_rlp_prefix = node[curr_idx: curr_idx + 2]
             curr_idx = curr_idx + 2
             if int(path_rlp_prefix, 16) <= int('b7', 16):
-                leafPathRlpHexLen = 0
+                leafPathRlpLengthHexLen = 0
                 leafPathHexLen = 2 * (int(path_rlp_prefix, 16) - int('80', 16))
             else:
-                leafPathRlpHexLen = 2 * (int(path_rlp_prefix, 16) - int('b7', 16))
-                len_nibbles = node[curr_idx: curr_idx + leafPathRlpHexLen] 
-                curr_idx = curr_idx + leafPathRlpHexLen
+                leafPathRlpLengthHexLen = 2 * (int(path_rlp_prefix, 16) - int('b7', 16))
+                len_nibbles = node[curr_idx: curr_idx + leafPathRlpLengthHexLen] 
+                curr_idx = curr_idx + leafPathRlpLengthHexLen
                 leafPathHexLen = 2 * int(len_nibbles, 16)
 
             path_prefix_nibble = node[curr_idx]
@@ -100,21 +100,21 @@ def gen_proof_input(proof, root, key, value, maxValueHexLen, maxDepth=None, debu
             curr_idx = curr_idx + 2
 
             if int(value_rlp_prefix, 16) <= int('b7', 16):
-                leafRlpValueLenHexLen = 0
-                leafValueLenHexLen = 2 * (int(value_rlp_prefix, 16) - int('80', 16))
+                leafValueRlpLengthHexLen = 0
+                leafValueHexLen = 2 * (int(value_rlp_prefix, 16) - int('80', 16))
             elif int(value_rlp_prefix, 16) <= int('bf', 16):
-                leafRlpValueLenHexLen = 2 * (int(value_rlp_prefix, 16) - int('b7', 16))
-                len_nibbles = node[curr_idx: curr_idx + leafRlpValueLenHexLen] 
-                curr_idx = curr_idx + leafRlpValueLenHexLen
-                leafValueLenHexLen = 2 * int(len_nibbles, 16)
+                leafValueRlpLengthHexLen = 2 * (int(value_rlp_prefix, 16) - int('b7', 16))
+                len_nibbles = node[curr_idx: curr_idx + leafValueRlpLengthHexLen] 
+                curr_idx = curr_idx + leafValueRlpLengthHexLen
+                leafValueHexLen = 2 * int(len_nibbles, 16)
             elif int(value_rlp_prefix, 16) <= int('f7', 16):
-                leafRlpValueLenHexLen = 0
-                leafValueLenHexLen = 2 * (int(value_rlp_prefix, 16) - int('c0', 16))
+                leafValueRlpLengthHexLen = 0
+                leafValueHexLen = 2 * (int(value_rlp_prefix, 16) - int('c0', 16))
             elif int(value_rlp_prefix, 16) <= int('ff', 16):
-                leafRlpValueLenHexLen = 2 * (int(value_rlp_prefix, 16) - int('f7', 16))
-                len_nibbles = node[curr_idx: curr_idx + leafRlpValueLenHexLen] 
-                curr_idx = curr_idx + leafRlpValueLenHexLen
-                leafValueLenHexLen = 2 * int(len_nibbles, 16)
+                leafValueRlpLengthHexLen = 2 * (int(value_rlp_prefix, 16) - int('f7', 16))
+                len_nibbles = node[curr_idx: curr_idx + leafValueRlpLengthHexLen] 
+                curr_idx = curr_idx + leafValueRlpLengthHexLen
+                leafValueHexLen = 2 * int(len_nibbles, 16)
 
             leafRlpHexs = serialize_hex(node[2:])
             leafRlpHexs = leafRlpHexs + [0 for x in range(LEAF_RLP_HEXS_LEN - len(leafRlpHexs))]
@@ -131,7 +131,7 @@ def gen_proof_input(proof, root, key, value, maxValueHexLen, maxDepth=None, debu
                 nodeRlpLengthHexLen.append(2 * (int(rlp_prefix, 16) - int('f7', 16)))
                 curr_idx = curr_idx + nodeRlpLengthHexLen[-1]
 
-            nodePathRlpHexLen.append(0)
+            nodePathRlpLengthHexLen.append(0)
             nodePathPrefixHexLen.append(0)
             nodePathHexLen.append(0)
 
@@ -163,24 +163,24 @@ def gen_proof_input(proof, root, key, value, maxValueHexLen, maxDepth=None, debu
             curr_idx = curr_idx + 2
             is_no_prefix = False
             if int(rlp_prefix, 16) <= int('7f', 16):
-                nodePathRlpHexLen.append(0)
+                nodePathRlpLengthHexLen.append(0)
                 nodePathHexLen.append(0)
                 is_no_prefix = True
             elif int(rlp_prefix, 16) <= int('b7', 16):
-                nodePathRlpHexLen.append(0)
+                nodePathRlpLengthHexLen.append(0)
                 nodePathHexLen.append(2 * (int(rlp_prefix, 16) - int('80', 16)))
             elif int(rlp_prefix, 16) <= int('bf', 16):
-                nodePathRlpHexLen.append(2 * (int(rlp_prefix, 16) - int('b7', 16)))
-                str_len = node[curr_idx: curr_idx + nodePathRlpHexLen[-1]]
-                curr_idx = curr_idx + nodePathRlpHexLen[-1]
+                nodePathRlpLengthHexLen.append(2 * (int(rlp_prefix, 16) - int('b7', 16)))
+                str_len = node[curr_idx: curr_idx + nodePathRlpLengthHexLen[-1]]
+                curr_idx = curr_idx + nodePathRlpLengthHexLen[-1]
                 nodePathHexLen.append(2 * int(str_len, 16))
             elif int(rlp_prefix, 16) <= int('f7', 16):
-                nodePathRlpLenHexLen.append(0)
+                nodePathRlpLengthHexLen.append(0)
                 nodePathHexLen.append(2 * (int(rlp_prefix, 16) - int('c0', 16)))
             elif int(rlp_prefix, 16) <= int('ff', 16):
-                nodePathRlpHexLen.append(2 * (int(rlp_prefix, 16) - int('f7', 16)))
-                str_len = node[curr_idx: curr_idx + nodePathRlpHexLen[-1]]
-                curr_idx = curr_idx + nodePathRlpHexLen[-1]
+                nodePathRlpLengthHexLen.append(2 * (int(rlp_prefix, 16) - int('f7', 16)))
+                str_len = node[curr_idx: curr_idx + nodePathRlpLengthHexLen[-1]]
+                curr_idx = curr_idx + nodePathRlpLengthHexLen[-1]
                 nodePathHexLen.append(2 * int(str_len, 16))
 
             if is_no_prefix:
@@ -216,7 +216,7 @@ def gen_proof_input(proof, root, key, value, maxValueHexLen, maxDepth=None, debu
     if maxDepth is not None:
         for idx in range(maxDepth - len(proof)):
             nodeRlpLengthHexLen.append(0)
-            nodePathRlpHexLen.append(0)
+            nodePathRlpLengthHexLen.append(0)
             nodePathPrefixHexLen.append(0)
             nodePathHexLen.append(0)
             nodeRefHexLen.append([0 for idx in range(16)])
@@ -231,16 +231,16 @@ def gen_proof_input(proof, root, key, value, maxValueHexLen, maxDepth=None, debu
         
         "leafRlpLengthHexLen": leafRlpLengthHexLen,
     
-        "leafPathRlpHexLen": leafPathRlpHexLen,
+        "leafPathRlpLengthHexLen": leafPathRlpLengthHexLen,
         "leafPathPrefixHexLen": leafPathPrefixHexLen,
         "leafPathHexLen": leafPathHexLen,
     
-        "leafRlpValueLenHexLen": leafRlpValueLenHexLen,
-        "leafValueLenHexLen": leafValueLenHexLen,
+        "leafValueRlpLengthHexLen": leafValueRlpLengthHexLen,
+        "leafValueHexLen": leafValueHexLen,
         "leafRlpHexs": leafRlpHexs,
         
         "nodeRlpLengthHexLen": nodeRlpLengthHexLen,
-        "nodePathRlpHexLen": nodePathRlpHexLen,
+        "nodePathRlpLengthHexLen": nodePathRlpLengthHexLen,
         "nodePathPrefixHexLen": nodePathPrefixHexLen,
         "nodePathHexLen": nodePathHexLen,
         "nodeRefHexLen": nodeRefHexLen,
@@ -270,7 +270,7 @@ def get_storage_pf(punk_pfs, slot=None, max_depth=8, debug=False):
         print('key:       {}'.format(key))
         print('value:     {}'.format(value))
     
-    pf = gen_proof_input(proof, root, key, rlp.encode(bytearray.fromhex(value)).hex(), 114, maxDepth=max_depth, debug=debug)
+    pf = gen_proof_input(proof, root, key, rlp.encode(bytearray.fromhex(value)).hex(), 66, maxDepth=max_depth, debug=debug)
     return pf
 
 def get_addr_pf(punk_pfs, debug=False):
