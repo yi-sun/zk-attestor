@@ -17,6 +17,7 @@ TAG_TO_NAME = {
     222222200003: 'Keccak256UpdateHex',
     222222200004: 'Keccak256Hex',
     222222200005: 'KeccakOrLiteralHex',
+    222222200006: 'KeccakAndPadHex',
     333333300001: 'SubArray',
     33333330001: 'SubArray',
     333333300002: 'ArrayEq',
@@ -150,7 +151,7 @@ def parse_one(lines, idx):
         log["inner_logs"], idx = parse_next(lines, idx)
 
         log["out"] = []
-        for idx2 in range(256):
+        for idx2 in range(64):
             log["out"].append(int(lines[idx][:-2]))
             idx = idx + 1
     elif tag == 222222200005:
@@ -167,6 +168,22 @@ def parse_one(lines, idx):
 
         log["outLen"] = int(lines[idx][:-2])
         idx = idx + 1
+        log["out"] = []
+        for idx2 in range(64):
+            log["out"].append(int(lines[idx][:-2]))
+            idx = idx + 1
+    elif tag == 222222200006:
+        log["maxInLen"] = int(lines[idx][:-2])
+        log["inLen"] = int(lines[idx + 1][:-2])
+        idx = idx + 2
+
+        log["in"] = []
+        for idx2 in range(log["maxInLen"]):
+            log["in"].append(int(lines[idx][:-2]))
+            idx = idx + 1
+
+        log["inner_logs"], idx = parse_next(lines, idx)
+
         log["out"] = []
         for idx2 in range(64):
             log["out"].append(int(lines[idx][:-2]))

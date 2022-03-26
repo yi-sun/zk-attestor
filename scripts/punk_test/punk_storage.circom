@@ -4,21 +4,21 @@ include "../../circuits/mpt.circom";
 
 component main {public [
     keyHexs,
-    valueHexs,
-    rootHashHexs,
-    leafRlpLengthHexLen,
-    leafPathRlpLengthHexLen,
-    leafPathPrefixHexLen,
-    leafPathHexLen,
-    leafValueRlpLengthHexLen,
-    leafValueHexLen,
-    leafRlpHexs,
-    nodeRlpLengthHexLen,    
-    nodePathRlpLengthHexLen,
-    nodePathPrefixHexLen,
-    nodePathHexLen,    
-    nodeRefHexLen,
-    nodeRlpHexs,
-    nodeTypes,
-    depth
+    valueHexs
+//    rootHashHexs,
+//    leafRlpLengthHexLen,
+//    leafPathRlpLengthHexLen,
+//    leafPathPrefixHexLen,
+//    leafPathHexLen,
+//    leafValueRlpLengthHexLen,
+//    leafValueHexLen,
+//    leafRlpHexs,
+//    nodeRlpLengthHexLen,    
+//    nodePathRlpLengthHexLen,
+//    nodePathPrefixHexLen,
+//    nodePathHexLen,    
+//    nodeRefHexLen,
+//    nodeRlpHexs,
+//    nodeTypes,
+//    depth
 ]} = MPTInclusionFixedKeyHexLen(8, 64, 66);
