@@ -74,12 +74,12 @@ def parse_signal_arrays(sigs, debug=False):
     return ret
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--witness_file', type=str, default='../build/eth_block_hash/witness.json')
-parser.add_argument('--sym_file', type=str, default='../build/eth_block_hash/eth_block_hash.sym')
+parser.add_argument('--witness_file', type=str, default='../build/eth_addr_storage/witness.json')
+parser.add_argument('--sym_file', type=str, default='../build/eth_addr_storage/eth_addr_storage.sym')
 
 parser.add_argument('--debug', action='store_true', default=False)
 parser.add_argument('--reparse', action='store_true', default=False)
-parser.add_argument('--sig_list_file', type=str, default='../build/eth_block_hash/eth_block_hash.sig')
+parser.add_argument('--sig_list_file', type=str, default='../build/eth_addr_storage/eth_addr_storage.sig')
 
 parser.add_argument('--width', type=int, default=100)
 parser.add_argument('--depth', type=int, default=3)
@@ -95,10 +95,14 @@ def main():
 
             for line in f:
                 count, line_num, template_idx, signal = line.strip().split(',')
+
                 # count is total count of signals, before optimization
                 # line_num = -1 if it's optimized out I think?
                 count = int(count)
                 line_num = int(line_num)
+                if args.debug:
+                    if count % 100000 == 0:
+                        print('Line: ', count)
                 if line_num == -1:
                     continue
                 else:

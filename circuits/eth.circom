@@ -18,11 +18,44 @@ template EthBlockHashHex() {
     signal input receiptsRootRlpHexs[64 + 2];
     signal input logsBloomRlpHexs[64 * 8 + 6];
     signal input difficultyRlpHexs[16];
-    signal input suffixRlpHexs[8 + 10 + 10 + 10 + 64 + 2 + 64 + 2 + 16 + 2 + 12];
 
     signal input suffixRlpHexLen;
+    signal input suffixRlpHexs[8 + 10 + 10 + 10 + 64 + 2 + 64 + 2 + 16 + 2 + 12];
 
     signal output blockHashHexs[64];
+
+    log(555555500001);
+    log(suffixRlpHexLen);
+    for (var idx = 0; idx < 6; idx++) {
+    	log(rlpPrefixHexs[idx]);
+    }
+    for (var idx = 0; idx < 66; idx++) {
+    	log(parentHashRlpHexs[idx]);
+    }
+    for (var idx = 0; idx < 66; idx++) {
+    	log(ommersHashRlpHexs[idx]);
+    }
+    for (var idx = 0; idx < 42; idx++) {
+    	log(beneficiaryRlpHexs[idx]);
+    }
+    for (var idx = 0; idx < 66; idx++) {
+    	log(stateRootRlpHexs[idx]);
+    }
+    for (var idx = 0; idx < 66; idx++) {
+    	log(transactionsRootRlpHexs[idx]);
+    }
+    for (var idx = 0; idx < 66; idx++) {
+    	log(receiptsRootRlpHexs[idx]);
+    }
+    for (var idx = 0; idx < 64 * 8 + 6; idx++) {
+    	log(logsBloomRlpHexs[idx]);
+    }
+    for (var idx = 0; idx < 16; idx++) {
+    	log(difficultyRlpHexs[idx]);
+    }
+    for (var idx = 0; idx < 200; idx++) {
+    	log(suffixRlpHexs[idx]);
+    }
 
     component pad = ReorderPad101Hex(1016, 1112, 1360, 13);
     pad.inLen <== 912 + suffixRlpHexLen;
@@ -83,6 +116,10 @@ template EthBlockHashHex() {
     
     for (var idx = 0; idx < 64; idx++) {
         blockHashHexs[idx] <== keccak.out[idx];
+    }
+
+    for (var idx = 0; idx < 64; idx++) {
+    	log(blockHashHexs[idx]);
     }
 }
 
@@ -421,7 +458,7 @@ template EthAddressStorageProof(addressMaxDepth, storageMaxDepth) {
 	block_hash_proof.suffixRlpHexs[idx] <== suffixRlpHexs[idx];
     }
     block_hash_proof.suffixRlpHexLen <== suffixRlpHexLen;
-    
+
     component block_hash_check = ArrayEq(64);
     for (var idx = 0; idx < 64; idx++) {
 	block_hash_check.a[idx] <== block_hash_proof.blockHashHexs[idx];

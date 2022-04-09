@@ -5,4 +5,4 @@ include "../../circuits/eth.circom";
 component main {public [blockHashHexs,
 			addressHexs,
 		        slotHexs
-		       ]} = EthAddressStorageProof(8, 8);
+		       ]} = EthAddressStorageProof(8, 7);

@@ -273,7 +273,7 @@ def get_storage_pf(punk_pfs, slot=None, max_depth=8, debug=False):
     pf = gen_proof_input(proof, root, key, rlp.encode(bytearray.fromhex(value)).hex(), 66, maxDepth=max_depth, debug=debug)
     return pf
 
-def get_addr_pf(punk_pfs, debug=False):
+def get_addr_pf(punk_pfs, max_depth=8, debug=False):
     acct_pf = punk_pfs['result']['accountProof']
     key = keccak256(punk_pfs['result']['address'][2:])
     nonce = punk_pfs['result']['nonce'][2:]
@@ -294,27 +294,175 @@ def get_addr_pf(punk_pfs, debug=False):
         print('storageHash: {}'.format(storageHash))
         print('codeHash:    {}'.format(codeHash))
 
-    pf = gen_proof_input(acct_pf, keccak256(acct_pf[0][2:]), key, addr_rlp.hex(), 228, debug=debug)
+    pf = gen_proof_input(acct_pf, keccak256(acct_pf[0][2:]), key, addr_rlp.hex(), 228, maxDepth=max_depth, debug=debug)
     return pf
+
+def get_block_pf(block, debug=False):
+    keys = [
+        'parentHash',
+        'sha3Uncles',              # ommersHash
+        'miner',                   # beneficiary
+        'stateRoot',
+        'transactionsRoot',
+        'receiptsRoot',
+        'logsBloom',
+        'difficulty',
+        'number',
+        'gasLimit',
+        'gasUsed',
+        'timestamp',
+        'extraData',
+        'mixHash',
+        'nonce',
+        'baseFeePerGas'
+    ]
+    
+    block_list = [
+        bytearray.fromhex(block['parentHash'][2:]),
+        bytearray.fromhex(block['sha3Uncles'][2:]),
+        bytearray.fromhex(block['miner'][2:]),
+        bytearray.fromhex(block['stateRoot'][2:]),
+        bytearray.fromhex(block['transactionsRoot'][2:]),
+        bytearray.fromhex(block['receiptsRoot'][2:]),
+        bytearray.fromhex(block['logsBloom'][2:]),
+        int(block['difficulty'], 16),
+        int(block['number'], 16),
+        int(block['gasLimit'], 16),
+        int(block['gasUsed'], 16),
+        int(block['timestamp'], 16),
+        bytearray.fromhex(block['extraData'][2:]),
+        bytearray.fromhex(block['mixHash'][2:]),
+        bytearray.fromhex(block['nonce'][2:]),
+        int(block['baseFeePerGas'], 16)
+    ]
+    rlp_block = rlp.encode(block_list).hex()
+    print(rlp_block, len(rlp_block))
+    print(keccak256(rlp_block))
+    print(block['hash'])
+
+    rlp_prefix = rlp_block[:2]
+    rlp_prefix_hex_len = 2 + 2 * (int(rlp_prefix, 16) - int('f7', 16))
+
+    rlp_suffix = ''.join([rlp.encode(x).hex() for x in block_list[-8:]])
+    suffix_hex_len = len(rlp_suffix)
+
+    if args.debug:
+        print('rlp(block): {}'.format(rlp_block))
+        print('rlp_prefix: {}'.format(rlp_prefix))
+        print('rlp_suffix: {}'.format(rlp_suffix), len(rlp_suffix))
+    
+    ret = {
+        "rlpPrefixHexs": serialize_hex(rlp_block[:rlp_prefix_hex_len]),
+        "parentHashRlpHexs": serialize_hex(rlp.encode(block_list[0]).hex()),
+        "ommersHashRlpHexs": serialize_hex(rlp.encode(block_list[1]).hex()),
+        "beneficiaryRlpHexs": serialize_hex(rlp.encode(block_list[2]).hex()),
+        "stateRootRlpHexs": serialize_hex(rlp.encode(block_list[3]).hex()),
+        "transactionsRootRlpHexs": serialize_hex(rlp.encode(block_list[4]).hex()),
+        "receiptsRootRlpHexs": serialize_hex(rlp.encode(block_list[5]).hex()),
+        "logsBloomRlpHexs": serialize_hex(rlp.encode(block_list[6]).hex()),
+        "difficultyRlpHexs": serialize_hex(rlp.encode(block_list[7]).hex()),
+        "suffixRlpHexs": serialize_hex(rlp_suffix) + [0 for x in range(200 - suffix_hex_len)],
+
+        "suffixRlpHexLen": suffix_hex_len
+    }
+    return ret
+
+def get_addr_storage_pf(block, pfs, slot, addr_max_depth, storage_max_depth, debug=False):
+    block_pf = get_block_pf(block, debug=debug)
+    addr_pf = get_addr_pf(pfs, max_depth=addr_max_depth, debug=debug)
+    storage_pf = get_storage_pf(pfs, slot=slot, max_depth=storage_max_depth, debug=debug)
+
+    if args.debug:
+        print(block_pf.keys())
+        print(addr_pf.keys())
+        print(storage_pf.keys())
+
+    ret = {}
+    ret['blockHashHexs'] = serialize_hex(block['hash'][2:])
+    for k in block_pf:
+        ret[k] = block_pf[k]
+
+    ret['addressHexs'] = serialize_hex(pfs['result']['address'][2:])
+    ret['nonceHexLen'] = len(pfs['result']['nonce'][2:])
+    ret['balanceHexLen'] = len(pfs['result']['balance'][2:])
+    ret['addressValueRlpHexs'] = addr_pf['valueHexs']
+    for k in ['leafRlpLengthHexLen',
+              'leafPathRlpLengthHexLen',
+              'leafPathPrefixHexLen',
+              'leafPathHexLen',
+              'leafValueRlpLengthHexLen',
+              'leafValueHexLen',
+              'leafRlpHexs',
+              'nodeRlpLengthHexLen',
+              'nodePathRlpLengthHexLen',
+              'nodePathPrefixHexLen',
+              'nodePathHexLen',
+              'nodeRefHexLen',
+              'nodeRlpHexs',
+              'nodeTypes',
+              'depth']:
+        new_key = 'address{}'.format(k[0].upper() + k[1:])
+        ret[new_key] = addr_pf[k]
+
+    ret['slotHexLen'] = 64
+    ret['slotHexs'] = serialize_hex(slot)
+    ret['slotValueRlpHexs'] = storage_pf['valueHexs']
+    for k in ['leafRlpLengthHexLen',
+              'leafPathRlpLengthHexLen',
+              'leafPathPrefixHexLen',
+              'leafPathHexLen',
+              'leafValueRlpLengthHexLen',
+              'leafValueHexLen',
+              'leafRlpHexs',
+              'nodeRlpLengthHexLen',
+              'nodePathRlpLengthHexLen',
+              'nodePathPrefixHexLen',
+              'nodePathHexLen',
+              'nodeRefHexLen',
+              'nodeRlpHexs',
+              'nodeTypes',
+              'depth']:
+        new_key = 'storage{}'.format(k[0].upper() + k[1:])
+        ret[new_key] = storage_pf[k]
+        
+    return ret
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--debug', action='store_true', default=False)
+
 parser.add_argument('--addr', action='store_true', default=False)
 parser.add_argument('--addr_file_str', type=str, default='inputs/input_address_proof.json')
+parser.add_argument('--addr_max_depth', type=int, default=8)
 
 parser.add_argument('--storage', action='store_true', default=False)
 parser.add_argument('--storage_file_str', type=str, default='inputs/input_storage_proof.json')
-parser.add_argument('--storage_max_depth', type=int, default=8)
+parser.add_argument('--storage_max_depth', type=int, default=7)
 parser.add_argument('--slot', type=int, default=10)
 parser.add_argument('--punk_slot', type=int, default=0)
+
+parser.add_argument('--eth_block_hash', action='store_true', default=False)
+parser.add_argument('--eth_block_hash_file_str', type=str, default='inputs/input_eth_block_hash.json')
+
+parser.add_argument('--eth_addr_storage', action='store_true', default=False)
+parser.add_argument('--eth_addr_storage_file_str', type=str, default='inputs/input_addr_storage.json')
+
 args = parser.parse_args()
 
 def main():
     with open('punk_pfs.json', 'r') as f:
+        punk_pfs = json.loads(f.read())
+    with open('punk_block.json', 'r') as f:
         punk_block = json.loads(f.read())
+        punk_block = punk_block['result']
 
+    if args.eth_block_hash:
+        block_pf = get_block_pf(punk_block, debug=args.debug)
+        block_str = pprint.pformat(block_pf, width=100, compact=True).replace("'", '"')
+        with open(args.eth_block_hash_file_str, 'w') as f:
+            f.write(block_str)
+        
     if args.addr:
-        addr_pf = get_addr_pf(punk_block, debug=args.debug)
+        addr_pf = get_addr_pf(punk_pfs, debug=args.debug)
         pf_str = pprint.pformat(addr_pf, width=100, compact=True).replace("'", '"')
         with open(args.addr_file_str, 'w') as f:
             f.write(pf_str)
@@ -343,7 +491,7 @@ def main():
             x = x + y
             slot = keccak256(x)
             
-        storage_pf = get_storage_pf(punk_block, slot=slot, max_depth=args.storage_max_depth, debug=args.debug)
+        storage_pf = get_storage_pf(punk_pfs, slot=slot, max_depth=args.storage_max_depth, debug=args.debug)
         print('Punk {:5} depth {:3}'.format(args.punk_slot, storage_pf['depth']))
         
         pf_str = pprint.pformat(storage_pf, width=100, compact=True).replace("'", '"')
@@ -353,6 +501,27 @@ def main():
         if args.debug:
             print(pf_str)
 
+    if args.eth_addr_storage:
+        if args.slot < 10:
+            x = hex(args.slot)[2:]
+            x = ''.join(['0' for idx in range(64 - len(x))]) + x
+            slot = x
+        else:
+            x = hex(args.punk_slot)[2:]
+            x = ''.join(['0' for idx in range(64 - len(x))]) + x
+            y = hex(10)[2:]
+            y = ''.join(['0' for idx in range(64 - len(y))]) + y
+            x = x + y
+            slot = keccak256(x)
+
+        eth_addr_storage_pf = get_addr_storage_pf(punk_block, punk_pfs, slot,
+                                                  args.addr_max_depth,
+                                                  args.storage_max_depth,
+                                                  debug=args.debug)
+        eth_addr_storage_str = pprint.pformat(eth_addr_storage_pf, width=100, compact=True).replace("'", '"')
+        with open(args.eth_addr_storage_file_str, 'w') as f:
+            f.write(eth_addr_storage_str)
+            
 if __name__ == '__main__':
     main()
 

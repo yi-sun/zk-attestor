@@ -38,7 +38,7 @@ template Pad0(inLenMin, inLenMax, outLen) {
     log(outLen);
     log(inLen);
     for (var idx = 0; idx < inLenMax; idx++) {
-	log(in[idx]);
+    	log(in[idx]);
     }
     
     for (var idx = 0; idx < inLenMin; idx++) {
@@ -80,7 +80,7 @@ template Pad0(inLenMin, inLenMax, outLen) {
     zero_sum_selector.out[0] === inLenMax - inLen + 1;
 
     for (var idx = 0; idx < outLen; idx++) {
-	log(out[idx]);
+    	log(out[idx]);
     }
 }
 
@@ -98,9 +98,9 @@ template ReorderPad101Hex(inLenMin, inLenMax, outLen, outLenBits) {
     log(outLen);
     log(outLenBits);
     log(inLen);
-
+    
     for (var idx = 0; idx < inLenMax; idx++) {
-	log(in[idx]);
+    	log(in[idx]);
     }
     
     signal inFlip[inLenMax];
@@ -114,14 +114,15 @@ template ReorderPad101Hex(inLenMin, inLenMax, outLen, outLenBits) {
     inLenVal.in[1] <== inLenMax;
     inLenVal.out === 1;
 
-    component pad0 = Pad0(inLenMin, inLenMax, outLen);
+    var minRounds = (inLenMin + 1 + 271) \ 272;
+    var maxRounds = (inLenMax + 1 + 271) \ 272;
+
+    component pad0 = Pad0(inLenMin, inLenMax, maxRounds * 272);
     for (var idx = 0; idx < inLenMax; idx++) {
 	pad0.in[idx] <== inFlip[idx];
     }
     pad0.inLen <== inLen;
 
-    var minRounds = (inLenMin + 1 + 271) \ 272;
-    var maxRounds = (inLenMax + 1 + 271) \ 272;
     component eqs[(maxRounds - minRounds + 1) * 272];
     for (var idx = (minRounds - 1) * 272; idx < maxRounds * 272; idx++) {
 	eqs[idx - (minRounds - 1) * 272] = IsEqual();
@@ -157,8 +158,8 @@ template ReorderPad101Hex(inLenMin, inLenMax, outLen, outLenBits) {
     }
 
     for (var idx = 0; idx < outLen; idx++) {
-	log(out[idx]);
-    }
+    	log(out[idx]);
+    }	
 }
 
 template Keccak256UpdateHex() {
@@ -170,10 +171,10 @@ template Keccak256UpdateHex() {
 
     log(222222200003);
     for (var idx = 0; idx < 272; idx++) {
-	log(inHex[idx]);
+    	log(inHex[idx]);
     }
     for (var idx = 0; idx < 25 * 64; idx++) {
-	log(sBits[idx]);
+    	log(sBits[idx]);
     }
     
     component n2b[272];
@@ -196,7 +197,7 @@ template Keccak256UpdateHex() {
     }
 
     for (var idx = 0; idx < 25 * 64; idx++) {
-	log(out[idx]);
+    	log(out[idx]);
     }
 }
 
@@ -257,7 +258,7 @@ template Keccak256Hex(maxRounds) {
     }
 
     for (var idx = 0; idx < 64; idx++) {
-	log(out[idx]);
+    	log(out[idx]);
     }
 }
 

@@ -1,4 +1,4 @@
-# eth-attestor
+# zkAttestor
 
 Scalable on-chain trustless attestations to data from any past Ethereum block or state.
 

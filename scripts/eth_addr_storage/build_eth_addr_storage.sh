@@ -20,13 +20,18 @@ echo $PWD
 
 echo "****COMPILING CIRCUIT****"
 start=`date +%s`
-circom "$CIRCUIT_NAME".circom --r1cs --wasm --sym --c --wat --output "$BUILD_DIR"
+circom "$CIRCUIT_NAME".circom --r1cs --sym --c --output "$BUILD_DIR"
 end=`date +%s`
 echo "DONE ($((end-start))s)"
 
 echo "****GENERATING WITNESS FOR SAMPLE INPUT****"
 start=`date +%s`
-node "$BUILD_DIR"/"$CIRCUIT_NAME"_js/generate_witness.js "$BUILD_DIR"/"$CIRCUIT_NAME"_js/"$CIRCUIT_NAME".wasm input_"$CIRCUIT_NAME".json "$BUILD_DIR"/witness.wtns
+#node "$BUILD_DIR"/"$CIRCUIT_NAME"_js/generate_witness.js "$BUILD_DIR"/"$CIRCUIT_NAME"_js/"$CIRCUIT_NAME".wasm ../input_gen/inputs/input_addr_storage.json "$BUILD_DIR"/witness.wtns > "$BUILD_DIR"/log.out
+set -x
+cd "$BUILD_DIR"/"$CIRCUIT_NAME"_cpp 
+make
+./"$CIRCUIT_NAME" ../../../scripts/input_gen/inputs/input_addr_storage.json ../witness.wtns > ../log.out
+cd ../../../scripts/"$CIRCUIT_NAME"
 end=`date +%s`
 echo "DONE ($((end-start))s)"
 
@@ -44,7 +49,7 @@ echo "DONE ($((end-start))s)"
 
 echo "****VERIFYING FINAL ZKEY****"
 start=`date +%s`
-NODE_OPTIONS="--max-old-space-size=56000" npx snarkjs zkey verify -verbose "$BUILD_DIR"/"$CIRCUIT_NAME".r1cs "$PHASE1" "$BUILD_DIR"/"$CIRCUIT_NAME".zkey
+NODE_OPTIONS="--max-old-space-size=56000" npx snarkjs zkey verify  "$BUILD_DIR"/"$CIRCUIT_NAME".r1cs "$PHASE1" "$BUILD_DIR"/"$CIRCUIT_NAME".zkey
 end=`date +%s`
 echo "DONE ($((end-start))s)"
 
