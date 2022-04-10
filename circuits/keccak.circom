@@ -59,7 +59,8 @@ template Pad0(inLenMin, inLenMax, outLen) {
         eqs[idx - inLenMin].in[0] <== out[idx];
         eqs[idx - inLenMin].in[1] <== in[idx];
 
-        eq_sum_selector.inp[idx - inLenMin + 1][0] <== eq_sum_selector.inp[idx - inLenMin][0] + eqs[idx - inLenMin].out;
+	var tempIdx = idx - inLenMin;
+        eq_sum_selector.inp[idx - inLenMin + 1][0] <== eq_sum_selector.inp[tempIdx][0] + eqs[tempIdx].out;
     }
     eq_sum_selector.sel <== inLen - inLenMin;
     eq_sum_selector.out[0] === inLen - inLenMin;
@@ -73,7 +74,8 @@ template Pad0(inLenMin, inLenMax, outLen) {
         if (idx == inLenMax) {
             zero_sum_selector.inp[idx - inLenMin][0] <== zeros[idx - inLenMin].out;
         } else {
-            zero_sum_selector.inp[idx - inLenMin][0] <== zeros[idx - inLenMin].out + zero_sum_selector.inp[idx - inLenMin + 1][0];
+	    var tempIdx = idx - inLenMin;
+            zero_sum_selector.inp[idx - inLenMin][0] <== zeros[tempIdx].out + zero_sum_selector.inp[tempIdx + 1][0];
         }
     }
     zero_sum_selector.sel <== inLen - inLenMin;
@@ -143,11 +145,14 @@ template ReorderPad101Hex(inLenMin, inLenMax, outLen, outLenBits) {
 	    if (idx == 0 && round == minRounds - 1) {
 		padHex[(round - minRounds + 1) * 272 + idx] <== 0;
 	    } else {
-		padHex[(round - minRounds + 1) * 272 + idx] <== eqs[(round - minRounds + 1) * 272 + idx - 1].out;
+	        var tempIdx = (round - minRounds + 1) * 272 + idx - 1;
+		padHex[(round - minRounds + 1) * 272 + idx] <== eqs[tempIdx].out;
 	    }
 	}
 	// 1000 if padding is in this nibble + 0001 if at most this many rounds
-	padHex[(round - minRounds + 1) * 272 + 271] <== eqs[(round - minRounds + 1) * 272 + 270].out + 8 * leqs[round + 1 - minRounds].out;
+	var tempIdx1 = (round - minRounds + 1) * 272 + 270;
+	var tempIdx2 = round + 1 - minRounds;
+	padHex[(round - minRounds + 1) * 272 + 271] <== eqs[tempIdx1].out + 8 * leqs[tempIdx2].out;
     }
 
     for (var idx = 0; idx < (minRounds - 1) * 272; idx++) {

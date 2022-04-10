@@ -114,12 +114,60 @@ template EthBlockHashHex() {
     }
     keccak.rounds <== 5 - leq.out;
     
-    for (var idx = 0; idx < 64; idx++) {
-        blockHashHexs[idx] <== keccak.out[idx];
+    for (var idx = 0; idx < 32; idx++) {
+        blockHashHexs[2 * idx + 1] <== keccak.out[2 * idx];
+        blockHashHexs[2 * idx] <== keccak.out[2 * idx + 1];	
     }
 
     for (var idx = 0; idx < 64; idx++) {
     	log(blockHashHexs[idx]);
+    }
+}
+
+template EthBlockHashHex2() {
+    signal input blockRlpHexs[1112];
+
+    signal output out;
+    signal output blockHashHexs[64];
+
+    component rlp = RlpArrayCheck(1112, 16, 4,
+    	      	    	          [64, 64, 40, 64, 64, 64, 512,  0, 0, 0, 0, 0,  0, 64, 16,  0],
+				  [64, 64, 40, 64, 64, 64, 512, 14, 6, 8, 8, 8, 64, 64, 18, 10]);
+    for (var idx = 0; idx < 1112; idx++) {
+    	rlp.in[idx] <== blockRlpHexs[idx];
+    }
+    rlp.arrayRlpPrefix1HexLen <== 4;
+    for (var idx = 0; idx < 6; idx++) {
+        rlp.fieldRlpPrefix1HexLen[idx] <== 0;
+    }
+    rlp.fieldRlpPrefix1HexLen[6] <== 4;
+    for (var idx = 7; idx < 16; idx++) {
+        rlp.fieldRlpPrefix1HexLen[idx] <== 0;
+    }
+
+    var blockRlpHexLen = rlp.totalRlpHexLen;
+    component pad = ReorderPad101Hex(1016, 1112, 1360, 13);
+    pad.inLen <== blockRlpHexLen;
+    for (var idx = 0; idx < 1112; idx++) {
+        pad.in[idx] <== blockRlpHexs[idx];
+    }
+
+    // if leq.out == 1, use 4 rounds, else use 5 rounds
+    component leq = LessEqThan(13);
+    leq.in[0] <== blockRlpHexLen + 1;
+    // 4 * blockSize = 1088
+    leq.in[1] <== 1088;
+    
+    var blockSizeHex = 136 * 2;
+    component keccak = Keccak256Hex(5);
+    for (var idx = 0; idx < 5 * blockSizeHex; idx++) {
+        keccak.inPaddedHex[idx] <== pad.out[idx];
+    }
+    keccak.rounds <== 5 - leq.out;
+
+    out <== rlp.out;
+    for (var idx = 0; idx < 64; idx++) {
+        blockHashHexs[idx] <== keccak.out[idx];
     }
 }
 
@@ -268,7 +316,7 @@ template EthStorageProof(maxDepth) {
 
     signal input storageRootHexs[64];
 
-    signal input slotHexLen;
+    var slotHexLen = 64;
     signal input slotHexs[64];
     signal input valueRlpHexs[66];
     
@@ -355,8 +403,10 @@ template EthTransactionProof(maxDepth) {
 }
 
 template EthAddressStorageProof(addressMaxDepth, storageMaxDepth) {
-    // block hash inputs
-    signal input blockHashHexs[64];
+    // 128 bits = big endian expression of hexes
+    signal input blockHash[2];    // 128 bit coordinates
+    signal input address;         // 160 bits
+    signal input slot[2];         // 128 bit coordinates
 
     signal input rlpPrefixHexs[6];
     signal input parentHashRlpHexs[64 + 2];
@@ -378,7 +428,6 @@ template EthAddressStorageProof(addressMaxDepth, storageMaxDepth) {
     var addressMaxBranchRlpHexLen = 1064;
     var addressMaxExtensionRlpHexLen = 4 + 2 + addressKeyHexLen + 2 + 64;
 
-    signal input addressHexs[40];
     signal input nonceHexLen;
     signal input balanceHexLen;
     signal input addressValueRlpHexs[228];
@@ -408,8 +457,6 @@ template EthAddressStorageProof(addressMaxDepth, storageMaxDepth) {
     var storageMaxBranchRlpHexLen = 1064;
     var storageMaxExtensionRlpHexLen = 4 + 2 + storageKeyHexLen + 2 + 64;
 
-    signal input slotHexLen;
-    signal input slotHexs[64];
     signal input slotValueRlpHexs[66];
     
     signal input storageLeafRlpLengthHexLen;
@@ -431,9 +478,33 @@ template EthAddressStorageProof(addressMaxDepth, storageMaxDepth) {
     signal input storageDepth;  
     
     signal output out;
-    signal output slotValue[64];
-    signal output slotValueHexLen;
-    
+    signal output slotValue[2];                  // 128 bit coordinates
+
+    signal blockHashHexs[64];
+    signal addressHexs[40];
+    signal slotHexs[64];
+    component blockHashN2b[2];
+    for (var idx = 0; idx < 2; idx++) {
+    	blockHashN2b[idx] = Num2Bits(128);
+	blockHashN2b[idx].in <== blockHash[idx];
+	for (var j = 0; j < 32; j++) {
+	    blockHashHexs[32 * idx + j] <== 8 * blockHashN2b[idx].out[4 * (31 - j) + 3] + 4 * blockHashN2b[idx].out[4 * (31 - j) + 2] + 2 * blockHashN2b[idx].out[4 * (31 - j) + 1] + blockHashN2b[idx].out[4 * (31 - j)];
+	}
+    }
+    component addressN2b = Num2Bits(160);
+    addressN2b.in <== address;
+    for (var idx = 0; idx < 40; idx++) {
+    	addressHexs[idx] <== 8 * addressN2b.out[4 * (39 - idx) + 3] + 4 * addressN2b.out[4 * (39 - idx) + 2] + 2 * addressN2b.out[4 * (39 - idx) + 1] + addressN2b.out[4 * (39 - idx)];
+    }	 
+    component slotN2b[2];
+    for (var idx = 0; idx < 2; idx++) {
+    	slotN2b[idx] = Num2Bits(128);
+	slotN2b[idx].in <== slot[idx];
+	for (var j = 0; j < 32; j++) {
+	    slotHexs[32 * idx + j] <== 8 * slotN2b[idx].out[4 * (31 - j) + 3] + 4 * slotN2b[idx].out[4 * (31 - j) + 2] + 2 * slotN2b[idx].out[4 * (31 - j) + 1] + slotN2b[idx].out[4 * (31 - j)];
+	}
+    }
+
     component block_hash_proof = EthBlockHashHex();
     for (var idx = 0; idx < 6; idx++) {
 	block_hash_proof.rlpPrefixHexs[idx] <== rlpPrefixHexs[idx];
@@ -506,7 +577,6 @@ template EthAddressStorageProof(addressMaxDepth, storageMaxDepth) {
     for (var idx = 0; idx < 64; idx++) {
 	storage_proof.storageRootHexs[idx] <== address_proof.storageRootHexs[idx];
     }
-    storage_proof.slotHexLen <== slotHexLen;
     for (var idx = 0; idx < 64; idx++) {
 	storage_proof.slotHexs[idx] <== slotHexs[idx];
     }
@@ -542,8 +612,17 @@ template EthAddressStorageProof(addressMaxDepth, storageMaxDepth) {
     final_check.in[1] <== block_hash_check.out + address_proof.out + storage_proof.out;
     out <== final_check.out;
 
-    slotValueHexLen <== storage_proof.valueHexLen;
+    component shift = ShiftRight(64, 9);
     for (var idx = 0; idx < 64; idx++) {
-	slotValue[idx] <== storage_proof.slotValue[idx];
+         shift.in[idx] <== storage_proof.slotValue[idx];
     }
+    shift.shift <== 64 - storage_proof.valueHexLen;
+    
+    for (var idx = 0; idx < 2; idx++) {
+        var temp = 0;
+        for (var j = 0; j < 32; j++) {
+	    temp = temp + shift.out[32 * idx + j] * (16 ** (31 - j));
+	}
+    	slotValue[idx] <== temp;
+    }			    
 }

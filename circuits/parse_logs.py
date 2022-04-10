@@ -20,6 +20,7 @@ TAG_TO_NAME = {
     222222200006: 'KeccakAndPadHex',
     333333300001: 'SubArray',
     333333300002: 'ArrayEq',
+    333333300003: 'ShiftLeft',
     444444400001: 'Multiplexer',
     555555500001: 'EthBlockHashHex',
     555555500002: 'EthAddressProof',
@@ -139,6 +140,25 @@ def parse_one(lines, idx):
         
         log["out"] = int(lines[idx][:-1])
         idx = idx + 1
+    elif tag == 333333300003:
+        log["nIn"] = int(lines[idx][:-1])
+        log["minShift"] = int(lines[idx + 1][:-1])
+        log["maxShift"] = int(lines[idx + 2][:-1])
+        log["shift"] = int(lines[idx + 3][:-1])
+        log["shiftBits"] = int(lines[idx + 4][:-1])
+        idx = idx + 5
+
+        log["in"] = []
+        for idx2 in range(log["nIn"]):
+            log["in"].append(int(lines[idx][:-1]))
+            idx = idx + 1
+
+        log["inner_logs"], idx = parse_next(lines, idx)
+        
+        log["out"] = []
+        for idx2 in range(log["nIn"]):
+            log["out"].append(int(lines[idx][:-1]))
+            idx = idx + 1      
     elif tag == 222222200001:
         log["inLenMin"] = int(lines[idx][:-1])
         log["inLenMax"] = int(lines[idx + 1][:-1])
