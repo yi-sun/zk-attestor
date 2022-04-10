@@ -21,6 +21,9 @@ TAG_TO_NAME = {
     333333300001: 'SubArray',
     333333300002: 'ArrayEq',
     333333300003: 'ShiftLeft',
+    333333300004: 'RlpArrayPrefix',
+    333333300005: 'RlpFieldPrefix',
+    333333300006: 'RlpArrayCheck',    
     444444400001: 'Multiplexer',
     555555500001: 'EthBlockHashHex',
     555555500002: 'EthAddressProof',
@@ -159,6 +162,75 @@ def parse_one(lines, idx):
         for idx2 in range(log["nIn"]):
             log["out"].append(int(lines[idx][:-1]))
             idx = idx + 1      
+    elif tag == 333333300004:
+        log["in"] = []
+        log["in"].append(int(lines[idx][:-1]))
+        log["in"].append(int(lines[idx + 1][:-1]))
+        idx = idx + 2
+
+        log["inner_logs"], idx = parse_next(lines, idx)
+
+        log["isBig"] = int(lines[idx][:-1])
+        log["prefixOrTotalHexLen"] = int(lines[idx + 1][:-1])
+        log["isValid"] = int(lines[idx + 2][:-1])
+        idx = idx + 3
+    elif tag == 333333300005:
+        log["in"] = []
+        log["in"].append(int(lines[idx][:-1]))
+        log["in"].append(int(lines[idx + 1][:-1]))
+        idx = idx + 2
+
+        log["inner_logs"], idx = parse_next(lines, idx)
+
+        log["isBig"] = int(lines[idx][:-1])
+        log["isLiteral"] = int(lines[idx + 1][:-1])
+        log["prefixOrTotalHexLen"] = int(lines[idx + 2][:-1])
+        log["isValid"] = int(lines[idx + 3][:-1])
+        idx = idx + 4
+    elif tag == 333333300006:
+        log["maxHexLen"] = int(lines[idx][:-1])
+        log["nFields"] = int(lines[idx + 1][:-1])
+        log["arrayPrefixMaxHexLen"] = int(lines[idx + 2][:-1])
+        idx = idx + 3
+        
+        log["fieldMinHexLen"] = []
+        log["fieldMaxHexLen"] = []
+        for idx2 in range(log["nFields"]):
+            log["fieldMinHexLen"].append(int(lines[idx][:-1]))
+            idx = idx + 1
+        for idx2 in range(log["nFields"]):
+            log["fieldMaxHexLen"].append(int(lines[idx][:-1]))
+            idx = idx + 1
+
+        log["arrayRlpPrefix1HexLen"] = int(lines[idx][:-1])
+        idx = idx + 1
+
+        log["in"] = []
+        for idx2 in range(log["maxHexLen"]):
+            log["in"].append(int(lines[idx][:-1]))
+            idx = idx + 1
+
+        log["fieldRlpPrefix1HexLen"] = []
+        for idx2 in range(log["nFields"]):
+            log["fieldRlpPrefix1HexLen"].append(int(lines[idx][:-1]))
+            idx = idx + 1
+
+        log["inner_logs"], idx = parse_next(lines, idx)
+
+        log["out"] = int(lines[idx][:-1])
+        log["totalRlpHexLen"] = int(lines[idx + 1][:-1])
+        idx = idx + 2
+
+        log["fieldHexLen"] = []
+        for idx2 in range(log["nFields"]):
+            log["fieldHexLen"].append(int(lines[idx][:-1]))
+            idx = idx + 1
+        log["fields"] = []
+        for idx2 in range(log["nFields"]):
+            log["fields"].append([])
+            for idx3 in range(log["maxHexLen"]):
+                log["fields"][-1].append(int(lines[idx][:-1]))
+                idx = idx + 1
     elif tag == 222222200001:
         log["inLenMin"] = int(lines[idx][:-1])
         log["inLenMax"] = int(lines[idx + 1][:-1])
@@ -175,7 +247,6 @@ def parse_one(lines, idx):
 
         log["out"] = []
         for idx2 in range(log["outLen"]):
-#            print(lines[idx][:-1])
             log["out"].append(int(lines[idx][:-1]))
             idx = idx + 1
     elif tag == 222222200002:

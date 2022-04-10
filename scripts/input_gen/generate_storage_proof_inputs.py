@@ -422,7 +422,8 @@ def get_block_pf2(block, debug=False):
     print(rlp_block, len(rlp_block))
     print(keccak256(rlp_block))
     print(block['hash'])
-
+    for x in block_list:
+        print(len(rlp.encode(x).hex()), x)
     rlp_prefix = rlp_block[:2]
     rlp_prefix_hex_len = 2 + 2 * (int(rlp_prefix, 16) - int('f7', 16))
 

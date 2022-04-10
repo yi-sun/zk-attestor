@@ -215,7 +215,11 @@ template RlpArrayPrefix() {
     signal output isBig;
     signal output prefixOrTotalHexLen;	
     signal output isValid;
-    
+
+    log(333333300004);
+    log(in[0]);
+    log(in[1]);
+
     component n2b1 = Num2Bits(4);
     component n2b2 = Num2Bits(4);
     n2b1.in <== in[0];
@@ -239,8 +243,12 @@ template RlpArrayPrefix() {
     
     // [c0, f7] or [f8, ff]
     var prefixVal = 16 * in[0] + in[1];
-    prefixOrTotalHexLen <== 2 * (prefixVal - 16 * 12) + 2 * isBig * (16 * 12 - 16 * 15 - 8);
+    prefixOrTotalHexLen <== 2 * (prefixVal - 16 * 12) + 2 * isBig * (16 * 12 - 16 * 15 - 7);
     isValid <== 1 - lt1.out;
+
+    log(isBig);
+    log(prefixOrTotalHexLen);
+    log(isValid);
 }
 
 template RlpFieldPrefix() {
@@ -249,7 +257,11 @@ template RlpFieldPrefix() {
     signal output isLiteral;
     signal output prefixOrTotalHexLen;
     signal output isValid;
-    
+
+    log(333333300005);
+    log(in[0]);
+    log(in[1]);
+
     component n2b1 = Num2Bits(4);
     component n2b2 = Num2Bits(4);
     n2b1.in <== in[0];
@@ -279,9 +291,14 @@ template RlpFieldPrefix() {
     
     var prefixVal = 16 * in[0] + in[1];
     // [00, 7f] or [80, b7] or [b8, bf]
-    prefixOrTotalHexLen <== 2 * (prefixVal - 16 * 8) + 2 * isBig * (16 * 8 - 16 * 11 - 8);
+    prefixOrTotalHexLen <== 2 * (prefixVal - 16 * 8) + 2 * isBig * (16 * 8 - 16 * 11 - 7);
 
     isValid <== lt1.out;
+
+    log(isBig);
+    log(isLiteral);
+    log(prefixOrTotalHexLen);
+    log(isValid);
 }
 
 // fieldMinHexLens, fieldMaxHexLens are arrays of length nFields
@@ -294,6 +311,24 @@ template RlpArrayCheck(maxHexLen, nFields, arrayPrefixMaxHexLen, fieldMinHexLen,
     signal output fieldHexLen[nFields];	
     signal output fields[nFields][maxHexLen];
     signal output totalRlpHexLen;
+
+    log(333333300006);
+    log(maxHexLen);
+    log(nFields);
+    log(arrayPrefixMaxHexLen);
+    for (var idx = 0; idx < nFields; idx++) {
+        log(fieldMinHexLen[idx]);
+    }
+    for (var idx = 0; idx < nFields; idx++) {
+        log(fieldMaxHexLen[idx]);
+    }
+    log(arrayRlpPrefix1HexLen);
+    for (var idx = 0; idx < maxHexLen; idx++) {
+        log(in[idx]);
+    }
+    for (var idx = 0; idx < nFields; idx++) {
+        log(fieldRlpPrefix1HexLen[idx]);
+    }
 
     component rlpArrayPrefix = RlpArrayPrefix();
     rlpArrayPrefix.in[0] <== in[0];
@@ -360,7 +395,7 @@ template RlpArrayCheck(maxHexLen, nFields, arrayPrefixMaxHexLen, fieldMinHexLen,
 	    fieldHexLenMulti[idx].inp[j][0] <== temp;
 	}
 	fieldHexLenMulti[idx].sel <== fieldPrefix[idx].isBig * (fieldRlpPrefix1HexLen[idx] - 1);
-	field_temp[idx] <== fieldPrefix[idx].prefixOrTotalHexLen + fieldPrefix[idx].isBig * (fieldHexLenMulti[idx].out[0] - fieldPrefix[idx].prefixOrTotalHexLen);
+	field_temp[idx] <== fieldPrefix[idx].prefixOrTotalHexLen + fieldPrefix[idx].isBig * (2 * fieldHexLenMulti[idx].out[0] - fieldPrefix[idx].prefixOrTotalHexLen);
 	fieldHexLen[idx] <== field_temp[idx] + fieldPrefix[idx].isLiteral * (2 - field_temp[idx]);
 
 	for (var j = 0; j < maxHexLen; j++) {
@@ -391,4 +426,15 @@ template RlpArrayCheck(maxHexLen, nFields, arrayPrefixMaxHexLen, fieldMinHexLen,
     outCheck.in[1] <== 2 * nFields + 3;
     
     out <== outCheck.out;
+
+    log(out);
+    log(totalRlpHexLen);
+    for (var idx = 0; idx < nFields; idx++) {
+        log(fieldHexLen[idx]);
+    }
+    for (var idx = 0; idx < nFields; idx++) {
+        for (var j = 0; j < maxHexLen; j++) {
+            log(fields[idx][j]);
+	}
+    }
 }
