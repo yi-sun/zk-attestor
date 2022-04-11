@@ -656,7 +656,7 @@ def parse_one(lines, idx):
         log["node_ref_match.out"] = int(lines[idx + 3][:-1])
         log["node_ref_len_match.out"] = int(lines[idx + 4][:-1])
         idx = idx + 5
-    elif tag == 1111111000032:
+    elif tag == 1111111000042:
         log["maxNodeRefHexLen"] = int(lines[idx][:-1])
 
         log["keyNibble"] = int(lines[idx + 1][:-1])

@@ -165,10 +165,15 @@ template MPTInclusionFixedKeyHexLen2(maxDepth, keyHexLen, maxValueHexLen) {
 
     // masks for depth selector
     component depthEq[maxDepth];
+    component depthLt[maxDepth];
     for (var layer = 0; layer < maxDepth; layer++) {
 	depthEq[layer] = IsEqual();
 	depthEq[layer].in[0] <== depth;
 	depthEq[layer].in[1] <== layer + 1;
+
+	depthLt[layer] = LessThan(10);
+	depthLt[layer].in[0] <== layer;
+	depthLt[layer].in[1] <== depth;
     }
 
     // constrain nodes along path along with their hashes
@@ -223,7 +228,7 @@ template MPTInclusionFixedKeyHexLen2(maxDepth, keyHexLen, maxValueHexLen) {
 	for (var idx = 0; idx < keyHexLen; idx++) {
 	    nibbleSelector[layer].inp[idx][0] <== keyHexs[idx];
 	}
-	nibbleSelector[layer].sel <== keyFragmentStarts[layer];
+	nibbleSelector[layer].sel <== depthLt[layer].out * keyFragmentStarts[layer];
 	
 	branches[layer] = EmptyVtBranchCheck2(64);	
 	branches[layer].keyNibble <== nibbleSelector[layer].out[0];

@@ -243,8 +243,10 @@ template RlpArrayPrefix() {
     
     // [c0, f7] or [f8, ff]
     var prefixVal = 16 * in[0] + in[1];
-    prefixOrTotalHexLen <== 2 * (prefixVal - 16 * 12) + 2 * isBig * (16 * 12 - 16 * 15 - 7);
     isValid <== 1 - lt1.out;
+    signal lenTemp;
+    lenTemp <== 2 * (prefixVal - 16 * 12) + 2 * isBig * (16 * 12 - 16 * 15 - 7);
+    prefixOrTotalHexLen <== isValid * lenTemp;
 
     log(isBig);
     log(prefixOrTotalHexLen);
@@ -291,7 +293,9 @@ template RlpFieldPrefix() {
     
     var prefixVal = 16 * in[0] + in[1];
     // [00, 7f] or [80, b7] or [b8, bf]
-    prefixOrTotalHexLen <== 2 * (prefixVal - 16 * 8) + 2 * isBig * (16 * 8 - 16 * 11 - 7);
+    signal lenTemp;
+    lenTemp <== 2 * (prefixVal - 16 * 8) + 2 * isBig * (16 * 8 - 16 * 11 - 7);
+    prefixOrTotalHexLen <== (1 - isLiteral) * lenTemp;
 
     isValid <== lt1.out;
 
@@ -362,7 +366,7 @@ template RlpArrayCheck(maxHexLen, nFields, arrayPrefixMaxHexLen, fieldMinHexLen,
     for (var idx = 0; idx < nFields; idx++) {
         var lenPrefixMaxHexs = 2 * (log_ceil(fieldMaxHexLen[idx]) \ 8 + 1);
         if (idx == 0) {
-            shiftToFieldRlps[idx] = ShiftLeft(maxHexLen, 0, arrayPrefixMaxHexLen);
+            shiftToFieldRlps[idx] = ShiftLeft(maxHexLen, 0, 2 + arrayPrefixMaxHexLen);
 	} else {
             shiftToFieldRlps[idx] = ShiftLeft(maxHexLen, fieldMinHexLen[idx - 1], fieldMaxHexLen[idx - 1]);
 	}
@@ -415,7 +419,7 @@ template RlpArrayCheck(maxHexLen, nFields, arrayPrefixMaxHexLen, fieldMinHexLen,
 
     var lenSum = 0;
     for (var idx = 0; idx < nFields; idx++) {
-        lenSum = lenSum + 2 + fieldRlpPrefix1HexLen[idx] + fieldHexLen[idx];
+        lenSum = lenSum + 2 - 2 * fieldPrefix[idx].isLiteral + fieldRlpPrefix1HexLen[idx] + fieldHexLen[idx];
     }
     component lenCheck = IsEqual();
     lenCheck.in[0] <== totalArrayHexLen;
