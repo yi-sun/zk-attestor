@@ -31,14 +31,14 @@ def serialize_int(val_hex):
     ret = 0
     for idx in range(len(val_hex)):
         ret = ret + int(val_hex[idx], 16) * (16 ** (len(val_hex) - idx - 1))
-    return ret
+    return str(ret)
 
 def serialize_int2(val_hex):
     ret0, ret1 = 0, 0
     for idx in range(32):
         ret0 = ret0 + int(val_hex[idx], 16) * (16 ** (31 - idx))
         ret1 = ret1 + int(val_hex[32 + idx], 16) * (16 ** (31 - idx))
-    return [ret0, ret1]
+    return [str(ret0), str(ret1)]
 
 def gen_proof_input(proof, root, key, value, maxValueHexLen, maxDepth=None, debug=False):
     LEAF_RLP_HEXS_LEN = 74 + maxValueHexLen
@@ -495,6 +495,79 @@ def get_addr_storage_pf(block, pfs, slot, addr_max_depth, storage_max_depth, deb
         
     return ret
 
+def get_addr_storage2_pf(block, pfs, slot, addr_max_depth, storage_max_depth, debug=False):
+    block_pf = get_block_pf2(block, debug=debug)
+    addr_pf = get_addr_pf(pfs, max_depth=addr_max_depth, debug=debug)
+    storage_pf = get_storage_pf(pfs, slot=slot, max_depth=storage_max_depth, debug=debug)
+
+    if args.debug:
+        print(block_pf.keys())
+        print(addr_pf.keys())
+        print(storage_pf.keys())
+
+    ret = {}
+    ret['blockHash'] = serialize_int2(block['hash'][2:])
+    for k in block_pf:
+        ret[k] = block_pf[k]
+
+    ret['address'] = serialize_int(pfs['result']['address'][2:])
+    ret['addressValueRlpHexs'] = addr_pf['valueHexs']
+    for k in ['leafRlpLengthHexLen',
+              'leafPathRlpLengthHexLen',
+              'leafPathPrefixHexLen',
+              'leafValueRlpLengthHexLen',
+              'leafRlpHexs',
+              'nodeRlpLengthHexLen',
+              'nodePathRlpLengthHexLen',
+              'nodePathPrefixHexLen',
+              'nodeRlpHexs',
+              'nodeTypes',
+              'depth']:
+        new_key = 'address{}'.format(k[0].upper() + k[1:])
+        ret[new_key] = addr_pf[k]
+
+    ret['addressKeyFragmentStarts'] = []
+    temp = 0
+    for idx in range(addr_max_depth):
+        ret['addressKeyFragmentStarts'].append(temp)
+        if idx < ret['addressDepth'] - 1:
+            if ret['addressNodeTypes'][idx] == 0:
+                temp = temp + 1
+            else:
+                temp = temp + addr_pf['nodePathHexLen'][idx]
+        elif idx == ret['addressDepth'] - 1:
+            temp = temp + addr_pf['leafPathHexLen']
+        
+    ret['slot'] = serialize_int2(slot)
+    ret['slotValueRlpHexs'] = storage_pf['valueHexs']
+    for k in ['leafRlpLengthHexLen',
+              'leafPathRlpLengthHexLen',
+              'leafPathPrefixHexLen',
+              'leafValueRlpLengthHexLen',
+              'leafRlpHexs',
+              'nodeRlpLengthHexLen',
+              'nodePathRlpLengthHexLen',
+              'nodePathPrefixHexLen',
+              'nodeRlpHexs',
+              'nodeTypes',
+              'depth']:
+        new_key = 'storage{}'.format(k[0].upper() + k[1:])
+        ret[new_key] = storage_pf[k]
+
+    ret['storageKeyFragmentStarts'] = []
+    temp = 0
+    for idx in range(storage_max_depth):
+        ret['storageKeyFragmentStarts'].append(temp)
+        if idx < ret['storageDepth'] - 1:
+            if ret['storageNodeTypes'][idx] == 0:
+                temp = temp + 1
+            else:
+                temp = temp + storage_pf['nodePathHexLen'][idx]
+        elif idx == ret['storageDepth'] - 1:
+            temp = temp + storage_pf['leafPathHexLen']
+        
+    return ret
+
 parser = argparse.ArgumentParser()
 parser.add_argument('--debug', action='store_true', default=False)
 
@@ -516,6 +589,9 @@ parser.add_argument('--eth_block_hash2_file_str', type=str, default='inputs/inpu
 
 parser.add_argument('--eth_addr_storage', action='store_true', default=False)
 parser.add_argument('--eth_addr_storage_file_str', type=str, default='inputs/input_addr_storage.json')
+
+parser.add_argument('--eth_addr_storage2', action='store_true', default=False)
+parser.add_argument('--eth_addr_storage2_file_str', type=str, default='inputs/input_addr_storage2.json')
 
 args = parser.parse_args()
 
@@ -598,7 +674,28 @@ def main():
         eth_addr_storage_str = pprint.pformat(eth_addr_storage_pf, width=100, compact=True).replace("'", '"')
         with open(args.eth_addr_storage_file_str, 'w') as f:
             f.write(eth_addr_storage_str)
-            
+
+    if args.eth_addr_storage2:
+        if args.slot < 10:
+            x = hex(args.slot)[2:]
+            x = ''.join(['0' for idx in range(64 - len(x))]) + x
+            slot = x
+        else:
+            x = hex(args.punk_slot)[2:]
+            x = ''.join(['0' for idx in range(64 - len(x))]) + x
+            y = hex(10)[2:]
+            y = ''.join(['0' for idx in range(64 - len(y))]) + y
+            x = x + y
+            slot = keccak256(x)
+
+        eth_addr_storage2_pf = get_addr_storage2_pf(punk_block, punk_pfs, slot,
+                                                    args.addr_max_depth,
+                                                    args.storage_max_depth,
+                                                    debug=args.debug)
+        eth_addr_storage2_str = pprint.pformat(eth_addr_storage2_pf, width=100, compact=True).replace("'", '"')
+        with open(args.eth_addr_storage2_file_str, 'w') as f:
+            f.write(eth_addr_storage2_str)
+
 if __name__ == '__main__':
     main()
 

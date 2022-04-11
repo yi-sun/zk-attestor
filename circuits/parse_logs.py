@@ -29,6 +29,10 @@ TAG_TO_NAME = {
     555555500002: 'EthAddressProof',
     555555500003: 'EthStorageProof',
     555555500004: 'EthAddressStorageProof',
+    1111111000012: 'LeafCheck2',
+    1111111000022: 'ExtensionCheck2',
+    1111111000042: 'EmptyVtBranchCheck2',
+    1111111000072: 'MPTInclusionFixedKeyHexLen',
 }
 
 def parse_next(lines, idx):
@@ -584,6 +588,111 @@ def parse_one(lines, idx):
         log["out"] = []
         for j in range(log["wIn"]):
             log["out"].append(int(lines[idx][:-1]))
+            idx = idx + 1
+    elif tag == 1111111000012:
+        log["maxKeyHexLen"] = int(lines[idx][:-1])
+        log["maxValueHexLen"] = int(lines[idx + 1][:-1])
+
+        log["keyNibbleHexLen"] = int(lines[idx + 2][:-1])
+        log["leafRlpLengthHexLen"] = int(lines[idx + 3][:-1])
+        log["leafPathRlpLengthHexLen"] = int(lines[idx + 4][:-1])
+        log["leafPathPrefixHexLen"] = int(lines[idx + 5][:-1])
+        log["leafValueRlpLengthHexLen"] = int(lines[idx + 6][:-1])
+        idx = idx + 7
+
+        log["maxLeafRlpHexLen"] = 4 + log["maxKeyHexLen"] + 2 + 4 + log["maxValueHexLen"]        
+
+        log["keyNibbleHexs"] = []
+        log["valueHexs"] = []
+        log["leafRlpHexs"] = []
+        for idx2 in range(log["maxKeyHexLen"]):
+            log["keyNibbleHexs"].append(int(lines[idx][:-1]))
+            idx = idx + 1
+        for idx2 in range(log["maxValueHexLen"]):
+            log["valueHexs"].append(int(lines[idx][:-1]))
+            idx = idx + 1
+        for idx2 in range(log["maxLeafRlpHexLen"]):
+            log["leafRlpHexs"].append(int(lines[idx][:-1]))
+            idx = idx + 1
+
+        log["inner_logs"], idx = parse_next(lines, idx)
+            
+        log["out"] = int(lines[idx][:-1])
+        log["key_path_len_match.out"] = int(lines[idx + 1][:-1])
+        log["key_path_match.out"] = int(lines[idx + 2][:-1])
+        log["leaf_value_match.out"] = int(lines[idx + 3][:-1])
+        idx = idx + 4
+    elif tag == 1111111000022:
+        log["maxKeyHexLen"] = int(lines[idx][:-1])
+        log["maxNodeRefHexLen"] = int(lines[idx + 1][:-1])
+
+        log["keyNibbleHexLen"] = int(lines[idx + 2][:-1])
+        log["nodeRefHexLen"] = int(lines[idx + 3][:-1])
+        log["nodeRlpLengthHexLen"] = int(lines[idx + 4][:-1])
+        log["nodePathRlpLengthHexLen"] = int(lines[idx + 5][:-1])
+        log["nodePathPrefixHexLen"] = int(lines[idx + 6][:-1])
+        idx = idx + 7
+
+        log["maxExtensionRlpHexLen"] = 4 + 2 + log["maxKeyHexLen"] + 2 + log["maxNodeRefHexLen"]        
+
+        log["keyNibbleHexs"] = []
+        log["nodeRefHexs"] = []
+        log["nodeRlpHexs"] = []
+        for idx2 in range(log["maxKeyHexLen"]):
+            log["keyNibbleHexs"].append(int(lines[idx][:-1]))
+            idx = idx + 1
+        for idx2 in range(log["maxNodeRefHexLen"]):
+            log["nodeRefHexs"].append(int(lines[idx][:-1]))
+            idx = idx + 1
+        for idx2 in range(log["maxExtensionRlpHexLen"]):
+            log["nodeRlpHexs"].append(int(lines[idx][:-1]))
+            idx = idx + 1
+
+        log["inner_logs"], idx = parse_next(lines, idx)
+            
+        log["out"] = int(lines[idx][:-1])
+        log["key_path_len_match.out"] = int(lines[idx + 1][:-1])
+        log["key_path_match.out"] = int(lines[idx + 2][:-1])
+        log["node_ref_match.out"] = int(lines[idx + 3][:-1])
+        log["node_ref_len_match.out"] = int(lines[idx + 4][:-1])
+        idx = idx + 5
+    elif tag == 1111111000032:
+        log["maxNodeRefHexLen"] = int(lines[idx][:-1])
+
+        log["keyNibble"] = int(lines[idx + 1][:-1])
+        log["nodeRefHexLen"] = int(lines[idx + 2][:-1])
+        log["nodeRlpLengthHexLen"] = int(lines[idx + 3][:-1])
+        log["maxBranchRlpHexLen"] = int(lines[idx + 4][:-1])
+        idx = idx + 5
+
+        log["nodeRefHexs"] = []
+        log["nodeRlpHexs"] = []
+        for idx2 in range(log["maxNodeRefHexLen"]):
+            log["nodeRefHexs"].append(int(lines[idx][:-1]))
+            idx = idx + 1
+        for idx2 in range(log["maxBranchRlpHexLen"]):
+            log["nodeRlpHexs"].append(int(lines[idx][:-1]))
+            idx = idx + 1
+
+        log["inner_logs"], idx = parse_next(lines, idx)
+            
+        log["out"] = int(lines[idx][:-1])
+        log["node_ref_match.out"] = int(lines[idx + 1][:-1])
+        log["node_ref_len_match.out"] = int(lines[idx + 2][:-1])
+        idx = idx + 3            
+    elif tag == 1111111000072:
+        log["maxDepth"] = int(lines[idx][:-1])
+        log["keyHexLen"] = int(lines[idx + 1][:-1])
+        log["maxValueHexLen"] = int(lines[idx + 2][:-1])
+        idx = idx + 3
+
+        log["inner_logs"], idx = parse_next(lines, idx)
+        
+        log["out"] = int(lines[idx][:-1])
+        idx = idx + 1
+        log["checksPassed"] = []
+        for idx2 in range(log["maxDepth"]):
+            log["checksPassed"].append(int(lines[idx][:-1]))
             idx = idx + 1
     else:
         print('Missing tag:', tag)

@@ -1,4 +1,4 @@
-pragma circom 2.0.1;
+pragma circom 2.0.2;
 
 include "../node_modules/circomlib/circuits/bitify.circom";
 include "../node_modules/circomlib/circuits/comparators.circom";
@@ -121,53 +121,6 @@ template EthBlockHashHex() {
 
     for (var idx = 0; idx < 64; idx++) {
     	log(blockHashHexs[idx]);
-    }
-}
-
-template EthBlockHashHex2() {
-    signal input blockRlpHexs[1112];
-
-    signal output out;
-    signal output blockHashHexs[64];
-
-    component rlp = RlpArrayCheck(1112, 16, 4,
-    	      	    	          [64, 64, 40, 64, 64, 64, 512,  0, 0, 0, 0, 0,  0, 64, 16,  0],
-				  [64, 64, 40, 64, 64, 64, 512, 14, 6, 8, 8, 8, 64, 64, 18, 10]);
-    for (var idx = 0; idx < 1112; idx++) {
-    	rlp.in[idx] <== blockRlpHexs[idx];
-    }
-    rlp.arrayRlpPrefix1HexLen <== 4;
-    for (var idx = 0; idx < 6; idx++) {
-        rlp.fieldRlpPrefix1HexLen[idx] <== 0;
-    }
-    rlp.fieldRlpPrefix1HexLen[6] <== 4;
-    for (var idx = 7; idx < 16; idx++) {
-        rlp.fieldRlpPrefix1HexLen[idx] <== 0;
-    }
-
-    var blockRlpHexLen = rlp.totalRlpHexLen;
-    component pad = ReorderPad101Hex(1016, 1112, 1360, 13);
-    pad.inLen <== blockRlpHexLen;
-    for (var idx = 0; idx < 1112; idx++) {
-        pad.in[idx] <== blockRlpHexs[idx];
-    }
-
-    // if leq.out == 1, use 4 rounds, else use 5 rounds
-    component leq = LessEqThan(13);
-    leq.in[0] <== blockRlpHexLen + 1;
-    // 4 * blockSize = 1088
-    leq.in[1] <== 1088;
-    
-    var blockSizeHex = 136 * 2;
-    component keccak = Keccak256Hex(5);
-    for (var idx = 0; idx < 5 * blockSizeHex; idx++) {
-        keccak.inPaddedHex[idx] <== pad.out[idx];
-    }
-    keccak.rounds <== 5 - leq.out;
-
-    out <== rlp.out;
-    for (var idx = 0; idx < 64; idx++) {
-        blockHashHexs[idx] <== keccak.out[idx];
     }
 }
 
