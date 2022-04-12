@@ -23,16 +23,23 @@ TAG_TO_NAME = {
     333333300003: 'ShiftLeft',
     333333300004: 'RlpArrayPrefix',
     333333300005: 'RlpFieldPrefix',
-    333333300006: 'RlpArrayCheck',    
+    333333300006: 'RlpArrayCheck',
+    3333333000062: 'RlpArrayCheck',    
     444444400001: 'Multiplexer',
     555555500001: 'EthBlockHashHex',
     555555500002: 'EthAddressProof',
     555555500003: 'EthStorageProof',
     555555500004: 'EthAddressStorageProof',
+    5555555000012: 'EthBlockHashHex2',
+    5555555000013: 'EthBlockHashHex3',
+    5555555000022: 'EthAddressProof2',
+    5555555000032: 'EthStorageProof2',
+    5555555000042: 'EthAddressStorageProof2',
     1111111000012: 'LeafCheck2',
     1111111000022: 'ExtensionCheck2',
     1111111000042: 'EmptyVtBranchCheck2',
-    1111111000072: 'MPTInclusionFixedKeyHexLen',
+    1111111000072: 'MPTInclusionFixedKeyHexLen2',
+    1111111000092: 'MPTInclusionNoBranchTermination2',
 }
 
 def parse_next(lines, idx):
@@ -217,6 +224,42 @@ def parse_one(lines, idx):
         log["fieldRlpPrefix1HexLen"] = []
         for idx2 in range(log["nFields"]):
             log["fieldRlpPrefix1HexLen"].append(int(lines[idx][:-1]))
+            idx = idx + 1
+
+        log["inner_logs"], idx = parse_next(lines, idx)
+
+        log["out"] = int(lines[idx][:-1])
+        log["totalRlpHexLen"] = int(lines[idx + 1][:-1])
+        idx = idx + 2
+
+        log["fieldHexLen"] = []
+        for idx2 in range(log["nFields"]):
+            log["fieldHexLen"].append(int(lines[idx][:-1]))
+            idx = idx + 1
+        log["fields"] = []
+        for idx2 in range(log["nFields"]):
+            log["fields"].append([])
+            for idx3 in range(log["maxHexLen"]):
+                log["fields"][-1].append(int(lines[idx][:-1]))
+                idx = idx + 1
+    elif tag == 3333333000062:
+        log["maxHexLen"] = int(lines[idx][:-1])
+        log["nFields"] = int(lines[idx + 1][:-1])
+        log["arrayPrefixMaxHexLen"] = int(lines[idx + 2][:-1])
+        idx = idx + 3
+        
+        log["fieldMinHexLen"] = []
+        log["fieldMaxHexLen"] = []
+        for idx2 in range(log["nFields"]):
+            log["fieldMinHexLen"].append(int(lines[idx][:-1]))
+            idx = idx + 1
+        for idx2 in range(log["nFields"]):
+            log["fieldMaxHexLen"].append(int(lines[idx][:-1]))
+            idx = idx + 1
+
+        log["in"] = []
+        for idx2 in range(log["maxHexLen"]):
+            log["in"].append(int(lines[idx][:-1]))
             idx = idx + 1
 
         log["inner_logs"], idx = parse_next(lines, idx)
@@ -594,11 +637,8 @@ def parse_one(lines, idx):
         log["maxValueHexLen"] = int(lines[idx + 1][:-1])
 
         log["keyNibbleHexLen"] = int(lines[idx + 2][:-1])
-        log["leafRlpLengthHexLen"] = int(lines[idx + 3][:-1])
-        log["leafPathRlpLengthHexLen"] = int(lines[idx + 4][:-1])
-        log["leafPathPrefixHexLen"] = int(lines[idx + 5][:-1])
-        log["leafValueRlpLengthHexLen"] = int(lines[idx + 6][:-1])
-        idx = idx + 7
+        log["leafPathPrefixHexLen"] = int(lines[idx + 3][:-1])
+        idx = idx + 4
 
         log["maxLeafRlpHexLen"] = 4 + log["maxKeyHexLen"] + 2 + 4 + log["maxValueHexLen"]        
 
@@ -628,10 +668,8 @@ def parse_one(lines, idx):
 
         log["keyNibbleHexLen"] = int(lines[idx + 2][:-1])
         log["nodeRefHexLen"] = int(lines[idx + 3][:-1])
-        log["nodeRlpLengthHexLen"] = int(lines[idx + 4][:-1])
-        log["nodePathRlpLengthHexLen"] = int(lines[idx + 5][:-1])
-        log["nodePathPrefixHexLen"] = int(lines[idx + 6][:-1])
-        idx = idx + 7
+        log["nodePathPrefixHexLen"] = int(lines[idx + 4][:-1])
+        idx = idx + 5
 
         log["maxExtensionRlpHexLen"] = 4 + 2 + log["maxKeyHexLen"] + 2 + log["maxNodeRefHexLen"]        
 
@@ -661,9 +699,8 @@ def parse_one(lines, idx):
 
         log["keyNibble"] = int(lines[idx + 1][:-1])
         log["nodeRefHexLen"] = int(lines[idx + 2][:-1])
-        log["nodeRlpLengthHexLen"] = int(lines[idx + 3][:-1])
-        log["maxBranchRlpHexLen"] = int(lines[idx + 4][:-1])
-        idx = idx + 5
+        log["maxBranchRlpHexLen"] = int(lines[idx + 3][:-1])
+        idx = idx + 4
 
         log["nodeRefHexs"] = []
         log["nodeRlpHexs"] = []
@@ -689,7 +726,185 @@ def parse_one(lines, idx):
         log["inner_logs"], idx = parse_next(lines, idx)
         
         log["out"] = int(lines[idx][:-1])
+        log["valueHexLen"] = int(lines[idx + 1][:-1])
+        idx = idx + 2
+        log["checksPassed"] = []
+        for idx2 in range(log["maxDepth"]):
+            log["checksPassed"].append(int(lines[idx][:-1]))
+            idx = idx + 1
+    elif tag == 5555555000012:
+        log["blockRlpHexs"] = []
+        for idx2 in range(1112):
+            log["blockRlpHexs"].append(int(lines[idx][:-1]))
+            idx = idx + 1
+
+        log["inner_logs"], idx = parse_next(lines, idx)
+
+        log["out"] = int(lines[idx][:-1])
         idx = idx + 1
+        log["blockHashHexs"] = []
+        log["stateRoot"] = []
+        log["transactionsRoot"] = []
+        log["receiptsRoot"] = []
+        log["number"] = []
+        for idx2 in range(64):
+            log["blockHashHexs"].append(int(lines[idx][:-1]))
+            idx = idx + 1
+        log["numberHexLen"] = int(lines[idx][:-1])
+        idx = idx + 1
+        for idx2 in range(64):
+            log["stateRoot"].append(int(lines[idx][:-1]))
+            idx = idx + 1
+        for idx2 in range(64):
+            log["transactionsRoot"].append(int(lines[idx][:-1]))
+            idx = idx + 1
+        for idx2 in range(64):
+            log["receiptsRoot"].append(int(lines[idx][:-1]))
+            idx = idx + 1
+        for idx2 in range(6):
+            log["number"].append(int(lines[idx][:-1]))
+            idx = idx + 1
+    elif tag == 5555555000013:
+        log["blockRlpHexs"] = []
+        for idx2 in range(1112):
+            log["blockRlpHexs"].append(int(lines[idx][:-1]))
+            idx = idx + 1
+
+        log["inner_logs"], idx = parse_next(lines, idx)
+
+        log["out"] = int(lines[idx][:-1])
+        idx = idx + 1
+        log["blockHashHexs"] = []
+        log["stateRoot"] = []
+        log["transactionsRoot"] = []
+        log["receiptsRoot"] = []
+        log["number"] = []
+        for idx2 in range(64):
+            log["blockHashHexs"].append(int(lines[idx][:-1]))
+            idx = idx + 1
+        log["numberHexLen"] = int(lines[idx][:-1])
+        idx = idx + 1
+        for idx2 in range(64):
+            log["stateRoot"].append(int(lines[idx][:-1]))
+            idx = idx + 1
+        for idx2 in range(64):
+            log["transactionsRoot"].append(int(lines[idx][:-1]))
+            idx = idx + 1
+        for idx2 in range(64):
+            log["receiptsRoot"].append(int(lines[idx][:-1]))
+            idx = idx + 1
+        for idx2 in range(6):
+            log["number"].append(int(lines[idx][:-1]))
+            idx = idx + 1
+    elif tag == 5555555000022:
+        log["maxDepth"] = int(lines[idx][:-1])
+        idx = idx + 1
+        log["stateRootHexs"] = []
+        log["addressHexs"] = []
+        log["keyFragmentStarts"] = []
+        log["addressValueRlpHexs"] = []
+        for idx2 in range(64):
+            log["stateRootHexs"].append(int(lines[idx][:-1]))
+            idx = idx + 1
+        for idx2 in range(40):
+            log["addressHexs"].append(int(lines[idx][:-1]))
+            idx = idx + 1
+        for idx2 in range(log["maxDepth"]):
+            log["keyFragmentStarts"].append(int(lines[idx][:-1]))
+            idx = idx + 1
+        for idx2 in range(228):
+            log["addressValueRlpHexs"].append(int(lines[idx][:-1]))
+            idx = idx + 1
+
+        log["inner_logs"], idx = parse_next(lines, idx)
+
+        log["out"] = int(lines[idx][:-1])
+        log["nonceHexLen"] = int(lines[idx + 1][:-1])
+        log["balanceHexLen"] = int(lines[idx + 2][:-1])
+        idx = idx + 3
+
+        log["nonceHexs"] = []
+        log["balanceHexs"] = []
+        log["storageRootHexs"] = []
+        log["codeHashHexs"] = []
+        for idx2 in range(64):
+            log["nonceHexs"].append(int(lines[idx][:-1]))
+            idx = idx + 1
+        for idx2 in range(24):
+            log["balanceHexs"].append(int(lines[idx][:-1]))
+            idx = idx + 1
+        for idx2 in range(64):
+            log["storageRootHexs"].append(int(lines[idx][:-1]))
+            idx = idx + 1
+        for idx2 in range(64):
+            log["codeHashHexs"].append(int(lines[idx][:-1]))
+            idx = idx + 1
+    elif tag == 5555555000032:
+        log["maxDepth"] = int(lines[idx][:-1])
+        idx = idx + 1
+        log["storageRootHexs"] = []
+        log["slotHexs"] = []
+        log["valueRlpHexs"] = []
+        log["keyFragmentStarts"] = []
+        for idx2 in range(64):
+            log["storageRootHexs"].append(int(lines[idx][:-1]))
+            idx = idx + 1
+        for idx2 in range(64):
+            log["slotHexs"].append(int(lines[idx][:-1]))
+            idx = idx + 1
+        for idx2 in range(66):
+            log["valueRlpHexs"].append(int(lines[idx][:-1]))
+            idx = idx + 1
+        for idx2 in range(log["maxDepth"]):
+            log["keyFragmentStarts"].append(int(lines[idx][:-1]))
+            idx = idx + 1
+
+        log["inner_logs"], idx = parse_next(lines, idx)
+
+        log["out"] = int(lines[idx][:-1])
+        idx = idx + 1
+        log["slotValue"] = []
+        for idx2 in range(64):
+            log["slotValue"].append(int(lines[idx][:-1]))
+            idx = idx + 1
+        log["valueHexLen"] = int(lines[idx][:-1])
+        idx = idx + 1
+    elif tag == 5555555000042:
+        log["blockHash"] = []
+        log["slot"] = []
+        log["addressMaxDepth"] = int(lines[idx][:-1])
+        log["storageMaxDepth"] = int(lines[idx + 1][:-1])
+        log["blockHash"].append(int(lines[idx + 2][:-1]))
+        log["blockHash"].append(int(lines[idx + 3][:-1]))
+        log["address"] = int(lines[idx + 4][:-1])
+        log["slot"].append(int(lines[idx + 5][:-1]))
+        log["slot"].append(int(lines[idx + 6][:-1]))
+        idx = idx + 7
+        
+        log["inner_logs"], idx = parse_next(lines, idx)
+
+        log["out"] = int(lines[idx][:-1])
+        log["block_hash_check.out"] = int(lines[idx + 1][:-1])
+        log["address_proof.out"] = int(lines[idx + 2][:-1])
+        log["storage_proof.out"] = int(lines[idx + 3][:-1])
+        log["slotValue"] = []
+        log["slotValue"].append(int(lines[idx + 4][:-1]))
+        log["slotValue"].append(int(lines[idx + 5][:-1]))
+        log["blockNumber"] = int(lines[idx + 6][:-1])
+        idx = idx + 7
+    elif tag == 1111111000092:
+        log["maxDepth"] = int(lines[idx][:-1])
+        log["maxKeyHexLen"] = int(lines[idx + 1][:-1])
+        log["maxValueHexLen"] = int(lines[idx + 2][:-1])
+        log["keyHexLen"] = int(lines[idx + 3][:-1])
+        log["depth"] = int(lines[idx + 4][:-1])
+        idx = idx + 5
+
+        log["inner_logs"], idx = parse_next(lines, idx)
+        
+        log["out"] = int(lines[idx][:-1])
+        log["valueHexLen"] = int(lines[idx + 1][:-1])
+        idx = idx + 2
         log["checksPassed"] = []
         for idx2 in range(log["maxDepth"]):
             log["checksPassed"].append(int(lines[idx][:-1]))

@@ -26,9 +26,6 @@ template LeafCheck2(maxKeyHexLen, maxValueHexLen) {
     //        value_rlp_prefix     [2]
     //        value_rlp_length     [0, 2 * ceil(log_8(maxValueHexLen))]
     //        value                [0, maxValueHexLen]
-    signal input leafRlpLengthHexLen;
-    signal input leafPathRlpLengthHexLen;
-    signal input leafValueRlpLengthHexLen;	
     signal input leafRlpHexs[maxLeafRlpHexLen];
 
     signal input leafPathPrefixHexLen;
@@ -42,10 +39,7 @@ template LeafCheck2(maxKeyHexLen, maxValueHexLen) {
     log(maxValueHexLen);
 
     log(keyNibbleHexLen);
-    log(leafRlpLengthHexLen);
-    log(leafPathRlpLengthHexLen);
     log(leafPathPrefixHexLen);
-    log(leafValueRlpLengthHexLen);
 
     for (var idx = 0; idx < maxKeyHexLen; idx++) {
 	log(keyNibbleHexs[idx]);
@@ -65,15 +59,12 @@ template LeafCheck2(maxKeyHexLen, maxValueHexLen) {
     }
 
     // check RLP validity
-    component rlp = RlpArrayCheck(maxLeafRlpHexLen, 2, arrayPrefixMaxHexLen,
-                                  [0, 0],
-				  [maxKeyHexLen + 2, maxValueHexLen]);
+    component rlp = RlpArrayCheckNoPrefix(maxLeafRlpHexLen, 2, arrayPrefixMaxHexLen,
+    	                                  [0, 0],
+					  [maxKeyHexLen + 2, maxValueHexLen]);
     for (var idx = 0; idx < maxLeafRlpHexLen; idx++) {
         rlp.in[idx] <== leafRlpHexs[idx];
     }
-    rlp.arrayRlpPrefix1HexLen <== leafRlpLengthHexLen;
-    rlp.fieldRlpPrefix1HexLen[0] <== leafPathRlpLengthHexLen;
-    rlp.fieldRlpPrefix1HexLen[1] <== leafValueRlpLengthHexLen;    
     
     // prefix check
     // if path prefix is even, then must be '20' and total length even
@@ -168,8 +159,6 @@ template ExtensionCheck2(maxKeyHexLen, maxNodeRefHexLen) {
     //             path                 [0, keyHexLen]
     //             node_ref_rlp_prefix  [2]
     //             node_ref             [0, 64]
-    signal input nodeRlpLengthHexLen;    
-    signal input nodePathRlpLengthHexLen;
     signal input nodeRlpHexs[maxExtensionRlpHexLen];
 
     signal input nodePathPrefixHexLen;
@@ -183,8 +172,6 @@ template ExtensionCheck2(maxKeyHexLen, maxNodeRefHexLen) {
 
     log(keyNibbleHexLen);
     log(nodeRefHexLen);
-    log(nodeRlpLengthHexLen);
-    log(nodePathRlpLengthHexLen);
     log(nodePathPrefixHexLen);
 
     for (var idx = 0; idx < maxKeyHexLen; idx++) {
@@ -205,14 +192,11 @@ template ExtensionCheck2(maxKeyHexLen, maxNodeRefHexLen) {
     }
 
     // validity of RLP encoding
-    component rlp = RlpArrayCheck(maxExtensionRlpHexLen, 2, arrayPrefixMaxHexLen,
-                                  [0, 0], [maxKeyHexLen + 2, maxNodeRefHexLen]);
+    component rlp = RlpArrayCheckNoPrefix(maxExtensionRlpHexLen, 2, arrayPrefixMaxHexLen,
+                                          [0, 0], [maxKeyHexLen + 2, maxNodeRefHexLen]);
     for (var idx = 0; idx < maxExtensionRlpHexLen; idx++) {
         rlp.in[idx] <== nodeRlpHexs[idx];
     }
-    rlp.arrayRlpPrefix1HexLen <== nodeRlpLengthHexLen;
-    rlp.fieldRlpPrefix1HexLen[0] <== nodePathRlpLengthHexLen;
-    rlp.fieldRlpPrefix1HexLen[1] <== 0;
 
     // prefix validity
     // if path prefix is even, then must be '00' and total length even
@@ -313,7 +297,6 @@ template EmptyVtBranchCheck2(maxNodeRefHexLen) {
     //          vt_rlp_prefix           [2]
     //          vt_rlp_length           [0]
     //          vt                      [0]
-    signal input nodeRlpLengthHexLen;
     signal input nodeRlpHexs[maxBranchRlpHexLen];
     
     signal output out;
@@ -324,7 +307,6 @@ template EmptyVtBranchCheck2(maxNodeRefHexLen) {
     
     log(keyNibble);
     log(nodeRefHexLen);
-    log(nodeRlpLengthHexLen);
 
     log(maxBranchRlpHexLen);
     for (var idx = 0; idx < maxNodeRefHexLen; idx++) {
@@ -345,15 +327,11 @@ template EmptyVtBranchCheck2(maxNodeRefHexLen) {
     }
 
     // check RLP validity
-    component rlp = RlpArrayCheck(maxBranchRlpHexLen, 17, 8,
-                                  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-				  [64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 0]);
+    component rlp = RlpArrayCheckNoPrefix(maxBranchRlpHexLen, 17, 8,
+                                          [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+	                                  [64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 0]);
     for (var idx = 0; idx < maxBranchRlpHexLen; idx++) {
         rlp.in[idx] <== nodeRlpHexs[idx];
-    }
-    rlp.arrayRlpPrefix1HexLen <== nodeRlpLengthHexLen;
-    for (var idx = 0; idx < 17; idx++) {
-    	rlp.fieldRlpPrefix1HexLen[idx] <== 0;
     }
 
     // check node_ref at index of nibble / value matches child / value

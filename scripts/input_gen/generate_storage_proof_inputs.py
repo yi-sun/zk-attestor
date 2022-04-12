@@ -277,6 +277,8 @@ def get_storage_pf(punk_pfs, slot=None, max_depth=8, debug=False):
     proof = punk_pf['proof']
     root = punk_pfs['result']['storageHash'][2:]
 
+    print('SlotValue: ' + punk_pf['value'][2:])
+    
     if debug:
         print('addr:      {}'.format(punk_pfs['result']['address']))
         print('stor root: {}'.format(root))
@@ -351,7 +353,8 @@ def get_block_pf(block, debug=False):
     rlp_block = rlp.encode(block_list).hex()
     print(rlp_block, len(rlp_block))
     print(keccak256(rlp_block))
-    print(block['hash'])
+    print('Hash: ' + block['hash'])
+    print('Number: ' + block['number'])
 
     rlp_prefix = rlp_block[:2]
     rlp_prefix_hex_len = 2 + 2 * (int(rlp_prefix, 16) - int('f7', 16))
@@ -421,7 +424,8 @@ def get_block_pf2(block, debug=False):
     rlp_block = rlp.encode(block_list).hex()
     print(rlp_block, len(rlp_block))
     print(keccak256(rlp_block))
-    print(block['hash'])
+    print('Hash: ' + block['hash'])
+    print('Number: ' + block['number'])
     for x in block_list:
         print(len(rlp.encode(x).hex()), x)
     rlp_prefix = rlp_block[:2]
@@ -455,21 +459,22 @@ def get_addr_storage_pf(block, pfs, slot, addr_max_depth, storage_max_depth, deb
     ret['nonceHexLen'] = len(pfs['result']['nonce'][2:])
     ret['balanceHexLen'] = len(pfs['result']['balance'][2:])
     ret['addressValueRlpHexs'] = addr_pf['valueHexs']
-    for k in ['leafRlpLengthHexLen',
-              'leafPathRlpLengthHexLen',
-              'leafPathPrefixHexLen',
-              'leafPathHexLen',
-              'leafValueRlpLengthHexLen',
-              'leafValueHexLen',
-              'leafRlpHexs',
-              'nodeRlpLengthHexLen',
-              'nodePathRlpLengthHexLen',
-              'nodePathPrefixHexLen',
-              'nodePathHexLen',
-              'nodeRefHexLen',
-              'nodeRlpHexs',
-              'nodeTypes',
-              'depth']:
+    for k in [
+            'leafRlpLengthHexLen',
+            'leafPathRlpLengthHexLen',
+            'leafPathPrefixHexLen',
+            'leafPathHexLen',
+            'leafValueRlpLengthHexLen',
+            'leafValueHexLen',
+            'leafRlpHexs',
+            'nodeRlpLengthHexLen',
+            'nodePathRlpLengthHexLen',
+            'nodePathPrefixHexLen',
+            'nodePathHexLen',
+            'nodeRefHexLen',
+            'nodeRlpHexs',
+            'nodeTypes',
+            'depth']:
         new_key = 'address{}'.format(k[0].upper() + k[1:])
         ret[new_key] = addr_pf[k]
 
@@ -510,15 +515,17 @@ def get_addr_storage2_pf(block, pfs, slot, addr_max_depth, storage_max_depth, de
     for k in block_pf:
         ret[k] = block_pf[k]
 
+    print('Address: ' + pfs['result']['address'][2:])        
     ret['address'] = serialize_int(pfs['result']['address'][2:])
     ret['addressValueRlpHexs'] = addr_pf['valueHexs']
-    for k in ['leafRlpLengthHexLen',
-              'leafPathRlpLengthHexLen',
+    for k in [
+#            'leafRlpLengthHexLen',
+#              'leafPathRlpLengthHexLen',
               'leafPathPrefixHexLen',
-              'leafValueRlpLengthHexLen',
+#              'leafValueRlpLengthHexLen',
               'leafRlpHexs',
-              'nodeRlpLengthHexLen',
-              'nodePathRlpLengthHexLen',
+#              'nodeRlpLengthHexLen',
+#              'nodePathRlpLengthHexLen',
               'nodePathPrefixHexLen',
               'nodeRlpHexs',
               'nodeTypes',
@@ -537,16 +544,19 @@ def get_addr_storage2_pf(block, pfs, slot, addr_max_depth, storage_max_depth, de
                 temp = temp + addr_pf['nodePathHexLen'][idx]
         elif idx == ret['addressDepth'] - 1:
             temp = temp + addr_pf['leafPathHexLen']
-        
+
+    print('Slot: ' + slot)
+
     ret['slot'] = serialize_int2(slot)
     ret['slotValueRlpHexs'] = storage_pf['valueHexs']
-    for k in ['leafRlpLengthHexLen',
-              'leafPathRlpLengthHexLen',
+    for k in [
+#            'leafRlpLengthHexLen',
+#              'leafPathRlpLengthHexLen',
               'leafPathPrefixHexLen',
-              'leafValueRlpLengthHexLen',
+#              'leafValueRlpLengthHexLen',
               'leafRlpHexs',
-              'nodeRlpLengthHexLen',
-              'nodePathRlpLengthHexLen',
+#              'nodeRlpLengthHexLen',
+#              'nodePathRlpLengthHexLen',
               'nodePathPrefixHexLen',
               'nodeRlpHexs',
               'nodeTypes',

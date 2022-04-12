@@ -408,8 +408,11 @@ def get_raw_tx(tx):
             int(tx['v'], 16),
             int(tx['r'], 16),
             int(tx['s'], 16)]
+        if len(tx['accessList']) > 0:
+            print('aaaaaaaaaaaaaaaaaa')
     else:
         assert('type not handled: {}'.format(tx['type']))
+    print('Type:', tx['type'], raw_tx)
     return raw_tx
 
 def get_tx_rlp(tx):
