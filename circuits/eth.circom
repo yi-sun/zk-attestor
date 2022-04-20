@@ -351,10 +351,6 @@ template EthStorageProof(maxDepth) {
     out <== mpt_proof.out;    
 }
 
-template EthTransactionProof(maxDepth) {
-
-}
-
 template EthAddressStorageProof(addressMaxDepth, storageMaxDepth) {
     // 128 bits = big endian expression of hexes
     signal input blockHash[2];    // 128 bit coordinates

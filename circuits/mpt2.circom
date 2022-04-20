@@ -210,7 +210,7 @@ template MPTInclusionFixedKeyHexLen2(maxDepth, keyHexLen, maxValueHexLen) {
 
 	exts[layer].nodePathPrefixHexLen <== nodePathPrefixHexLen[layer];
 	for (var idx = 0; idx < maxExtensionRlpHexLen; idx++) {
-	    exts[layer].nodeRlpHexs[idx] <== nodeRlpHexs[layer][idx];
+	    exts[layer].nodeRlpHexs[idx] <== nodeTypes[layer] * nodeRlpHexs[layer][idx];
 	}
 
         // constrain Branch
@@ -237,7 +237,7 @@ template MPTInclusionFixedKeyHexLen2(maxDepth, keyHexLen, maxValueHexLen) {
 	}
 	
 	for (var idx = 0; idx < maxBranchRlpHexLen; idx++) {
-	    branches[layer].nodeRlpHexs[idx] <== nodeRlpHexs[layer][idx];
+	    branches[layer].nodeRlpHexs[idx] <== (1 - nodeTypes[layer]) * nodeRlpHexs[layer][idx];
 	}
 
 	// compute hashes at each layer
@@ -482,7 +482,7 @@ template MPTInclusionNoBranchTermination2(maxDepth, maxKeyHexLen, maxValueHexLen
 
 	exts[layer].nodePathPrefixHexLen <== nodePathPrefixHexLen[layer];
 	for (var idx = 0; idx < maxExtensionRlpHexLen; idx++) {
-	    exts[layer].nodeRlpHexs[idx] <== nodeRlpHexs[layer][idx];
+	    exts[layer].nodeRlpHexs[idx] <== nodeTypes[layer] * nodeRlpHexs[layer][idx];
 	}
 
 	// constrain Branch
@@ -509,7 +509,7 @@ template MPTInclusionNoBranchTermination2(maxDepth, maxKeyHexLen, maxValueHexLen
 	}
 	
 	for (var idx = 0; idx < maxBranchRlpHexLen; idx++) {
-	    branches[layer].nodeRlpHexs[idx] <== nodeRlpHexs[layer][idx];
+	    branches[layer].nodeRlpHexs[idx] <== (1 - nodeTypes[layer]) * nodeRlpHexs[layer][idx];
 	}
 
 	// compute hashes at each layer

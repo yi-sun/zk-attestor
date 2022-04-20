@@ -259,6 +259,7 @@ template RlpFieldPrefix() {
     signal output isLiteral;
     signal output prefixOrTotalHexLen;
     signal output isValid;
+    signal output isEmptyList;
 
     log(333333300005);
     log(in[0]);
@@ -288,21 +289,34 @@ template RlpFieldPrefix() {
     lt3.in[0] <== in[1];
     lt3.in[1] <== 8;
 
+    // if is 'c0', then is an empty list
+    component eq1 = IsEqual();
+    eq1.in[0] <== in[0];
+    eq1.in[1] <== 12;
+
+    component eq2 = IsEqual();
+    eq2.in[0] <== in[1];
+    eq2.in[1] <== 0;
+
     isLiteral <== lt2.out;
     isBig <== eq.out * (1 - lt3.out);
+    isEmptyList <== eq1.out * eq2.out;
     
     var prefixVal = 16 * in[0] + in[1];
     // [00, 7f] or [80, b7] or [b8, bf]
     signal lenTemp;
+    signal lenTemp2;
     lenTemp <== 2 * (prefixVal - 16 * 8) + 2 * isBig * (16 * 8 - 16 * 11 - 7);
-    prefixOrTotalHexLen <== (1 - isLiteral) * lenTemp;
+    lenTemp2 <== (1 - isLiteral) * lenTemp;
+    prefixOrTotalHexLen <== (1 - isEmptyList) * lenTemp2;
 
-    isValid <== lt1.out;
+    isValid <== lt1.out + isEmptyList - lt1.out * isEmptyList;
 
     log(isBig);
     log(isLiteral);
     log(prefixOrTotalHexLen);
     log(isValid);
+    log(isEmptyList);
 }
 
 // fieldMinHexLens, fieldMaxHexLens are arrays of length nFields
@@ -528,8 +542,9 @@ template RlpArrayCheckNoPrefix(maxHexLen, nFields, arrayPrefixMaxHexLen, fieldMi
 	    fieldHexLenMulti[idx].inp[j][0] <== temp;
 	}
 	fieldHexLenMulti[idx].sel <== fieldPrefix[idx].isBig * (fieldRlpPrefix1HexLen[idx] - 1);
-	field_temp[idx] <== fieldPrefix[idx].prefixOrTotalHexLen + fieldPrefix[idx].isBig * (2 * fieldHexLenMulti[idx].out[0] - fieldPrefix[idx].prefixOrTotalHexLen);
-	fieldHexLen[idx] <== field_temp[idx] + fieldPrefix[idx].isLiteral * (2 - field_temp[idx]);
+	var temp2 = (2 * fieldHexLenMulti[idx].out[0] - fieldPrefix[idx].prefixOrTotalHexLen);
+	field_temp[idx] <== fieldPrefix[idx].prefixOrTotalHexLen + fieldPrefix[idx].isBig * temp2;
+	fieldHexLen[idx] <== field_temp[idx] + 2 * fieldPrefix[idx].isLiteral - field_temp[idx] * fieldPrefix[idx].isLiteral;
 
 	for (var j = 0; j < maxHexLen; j++) {
             shiftToField[idx].in[j] <== shiftToFieldRlps[idx].out[j];

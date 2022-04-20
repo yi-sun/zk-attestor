@@ -197,7 +197,8 @@ def parse_one(lines, idx):
         log["isLiteral"] = int(lines[idx + 1][:-1])
         log["prefixOrTotalHexLen"] = int(lines[idx + 2][:-1])
         log["isValid"] = int(lines[idx + 3][:-1])
-        idx = idx + 4
+        log["isEmptyList"] = int(lines[idx + 4][:-1])
+        idx = idx + 5
     elif tag == 333333300006:
         log["maxHexLen"] = int(lines[idx][:-1])
         log["nFields"] = int(lines[idx + 1][:-1])
