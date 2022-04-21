@@ -6,7 +6,7 @@ include "../node_modules/circomlib/circuits/multiplexer.circom";
 
 include "./keccak.circom";
 include "./rlp.circom";
-include "./mpt2.circom";
+include "./mpt.circom";
 
 template EthBlockHashHex() {
     signal input blockRlpHexs[1112];
@@ -21,14 +21,14 @@ template EthBlockHashHex() {
     signal output receiptsRoot[64];	
     signal output number[6];
 
-    log(5555555000013);
+    log(555555500001);
     for (var idx = 0; idx < 1112; idx++) {
         log(blockRlpHexs[idx]);
     }
 
-    component rlp = RlpArrayCheckNoPrefix(1112, 16, 4,
-        	      	    	          [64, 64, 40, 64, 64, 64, 512,  0, 0, 0, 0, 0,  0, 64, 16,  0],
-					  [64, 64, 40, 64, 64, 64, 512, 14, 6, 8, 8, 8, 64, 64, 18, 10]);
+    component rlp = RlpArrayCheck(1112, 16, 4,
+        	      	    	  [64, 64, 40, 64, 64, 64, 512,  0, 0, 0, 0, 0,  0, 64, 16,  0],
+				  [64, 64, 40, 64, 64, 64, 512, 14, 6, 8, 8, 8, 64, 64, 18, 10]);
     for (var idx = 0; idx < 1112; idx++) {
     	rlp.in[idx] <== blockRlpHexs[idx];
     }
@@ -129,7 +129,7 @@ template EthAddressProof(maxDepth) {
     signal output storageRootHexs[64];
     signal output codeHashHexs[64];
 
-    log(5555555000022);
+    log(555555500002);
     log(maxDepth);
     for (var idx = 0; idx < 64; idx++) {
         log(stateRootHexs[idx]);
@@ -145,7 +145,7 @@ template EthAddressProof(maxDepth) {
     }
 
     // check address info is properly formattted
-    component rlp = RlpArrayCheckNoPrefix(228, 4, 2, [0, 0, 64, 64], [64, 24, 64, 64]);
+    component rlp = RlpArrayCheck(228, 4, 2, [0, 0, 64, 64], [64, 24, 64, 64]);
     for (var idx = 0; idx < 228; idx++) {
     	rlp.in[idx] <== addressValueRlpHexs[idx];
     }
@@ -173,7 +173,7 @@ template EthAddressProof(maxDepth) {
     }
     address_hash.inLen <== 40;
     
-    component mpt = MPTInclusionFixedKeyHexLen2(maxDepth, 64, 228);    
+    component mpt = MPTInclusionFixedKeyHexLen(maxDepth, 64, 228);    
     for (var idx = 0; idx < 64; idx++) {
 	mpt.keyHexs[idx] <== address_hash.out[idx];
     }
@@ -247,7 +247,7 @@ template EthStorageProof(maxDepth) {
     signal output slotValue[64];
     signal output valueHexLen;
 
-    log(5555555000032);
+    log(555555500003);
     log(maxDepth);
     for (var idx = 0; idx < 64; idx++) {
     	log(storageRootHexs[idx]);
@@ -270,7 +270,7 @@ template EthStorageProof(maxDepth) {
     slot_hash.inLen <== 64;
 
     // check MPT inclusion proof
-    component mpt = MPTInclusionFixedKeyHexLen2(maxDepth, 64, 66);
+    component mpt = MPTInclusionFixedKeyHexLen(maxDepth, 64, 66);
     for (var idx = 0; idx < 64; idx++) {
 	mpt.keyHexs[idx] <== slot_hash.out[idx];	
     }
@@ -404,17 +404,17 @@ template EthTransactionProofCore(maxDepth, maxIndex, maxTxRlpHexLen) {
 
     // check tx info is properly formatted
     var maxArrayPrefix1HexLen = 2 * (log_ceil(maxTxRlpHexLen) \ 8 + 1);
-    component rlp0 = RlpArrayCheckNoPrefix(maxTxRlpHexLen, 9, maxArrayPrefix1HexLen,
-        	      	                   [ 0,   0, 0, 40, 0, 0, 0, 64, 64],
-					   [64, 64, 64, 40, 64, maxTxRlpHexLen - 170, 2, 64, 64]);
+    component rlp0 = RlpArrayCheck(maxTxRlpHexLen, 9, maxArrayPrefix1HexLen,
+        	      	           [ 0,   0, 0, 40, 0, 0, 0, 64, 64],
+				   [64, 64, 64, 40, 64, maxTxRlpHexLen - 170, 2, 64, 64]);
     for (var idx = 0; idx < maxTxRlpHexLen; idx++) {
         rlp0.in[idx] <== (1 - txType) * txRlpHexs[idx];
     }
 
     // assume access list is empty
-    component rlp2 = RlpArrayCheckNoPrefix(maxTxRlpHexLen - 2, 12, maxArrayPrefix1HexLen,
-        	      	                   [0,  0,  0,  0,  0, 40,  0,                    0, 0, 0, 64, 64],
-					   [2, 64, 64, 64, 64, 40, 64, maxTxRlpHexLen - 172, 0, 2, 64, 64]);
+    component rlp2 = RlpArrayCheck(maxTxRlpHexLen - 2, 12, maxArrayPrefix1HexLen,
+        	      	           [0,  0,  0,  0,  0, 40,  0,                    0, 0, 0, 64, 64],
+				   [2, 64, 64, 64, 64, 40, 64, maxTxRlpHexLen - 172, 0, 2, 64, 64]);
     for (var idx = 0; idx < maxTxRlpHexLen - 2; idx++) {
         rlp2.in[idx] <== txType * txRlpHexs[idx + 2];
     }
@@ -505,7 +505,7 @@ template EthTransactionProofCore(maxDepth, maxIndex, maxTxRlpHexLen) {
     rlpIndexHexs[5] <== (1 - index_rlp_lt2.out) * (index_n2b.out[0] + 2 * index_n2b.out[1] + 4 * index_n2b.out[2] + 8 * index_n2b.out[3]);
 
     // validate MPT inclusion
-    component mpt = MPTInclusionNoBranchTermination2(maxDepth, 6, maxTxRlpHexLen);
+    component mpt = MPTInclusionNoBranchTermination(maxDepth, 6, maxTxRlpHexLen);
     for (var idx = 0; idx < 6; idx++) {
 	mpt.keyHexs[idx] <== rlpIndexHexs[idx];
     }
@@ -664,7 +664,7 @@ template EthAddressStorageProof(addressMaxDepth, storageMaxDepth) {
     signal output blockNumber;
     signal output slotValue[2];                  // 128 bit coordinates
 
-    log(5555555000042);
+    log(555555500004);
     log(addressMaxDepth);
     log(storageMaxDepth);
     log(blockHash[0]);

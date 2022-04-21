@@ -7,7 +7,7 @@ include "../node_modules/circomlib/circuits/multiplexer.circom";
 include "./keccak.circom";
 include "./rlp.circom";
 
-template LeafCheck2(maxKeyHexLen, maxValueHexLen) {
+template LeafCheck(maxKeyHexLen, maxValueHexLen) {
     var maxLeafRlpHexLen = 4 + (maxKeyHexLen + 2) + 4 + maxValueHexLen;
     var LEAF_BITS = log_ceil(maxLeafRlpHexLen);
     var arrayPrefixMaxHexLen = 2 * (LEAF_BITS \ 8 + 1);
@@ -34,7 +34,7 @@ template LeafCheck2(maxKeyHexLen, maxValueHexLen) {
     signal output outLen;
     signal output valueHexLen;
 
-    log(1111111000012);
+    log(111111100001);
     log(maxKeyHexLen);
     log(maxValueHexLen);
 
@@ -59,9 +59,9 @@ template LeafCheck2(maxKeyHexLen, maxValueHexLen) {
     }
 
     // check RLP validity
-    component rlp = RlpArrayCheckNoPrefix(maxLeafRlpHexLen, 2, arrayPrefixMaxHexLen,
-    	                                  [0, 0],
-					  [maxKeyHexLen + 2, maxValueHexLen]);
+    component rlp = RlpArrayCheck(maxLeafRlpHexLen, 2, arrayPrefixMaxHexLen,
+    	                          [0, 0],
+				  [maxKeyHexLen + 2, maxValueHexLen]);
     for (var idx = 0; idx < maxLeafRlpHexLen; idx++) {
         rlp.in[idx] <== leafRlpHexs[idx];
     }
@@ -140,7 +140,7 @@ template LeafCheck2(maxKeyHexLen, maxValueHexLen) {
     log(leaf_value_match.out);
 }
 
-template ExtensionCheck2(maxKeyHexLen, maxNodeRefHexLen) {
+template ExtensionCheck(maxKeyHexLen, maxNodeRefHexLen) {
     var maxExtensionRlpHexLen = 4 + 2 + maxKeyHexLen + 2 + maxNodeRefHexLen;
     var EXTENSION_BITS = log_ceil(maxExtensionRlpHexLen);
     var arrayPrefixMaxHexLen = 2 * (EXTENSION_BITS \ 8 + 1);
@@ -166,7 +166,7 @@ template ExtensionCheck2(maxKeyHexLen, maxNodeRefHexLen) {
     signal output out;
     signal output outLen;	
 
-    log(1111111000022);
+    log(111111100002);
     log(maxKeyHexLen);
     log(maxNodeRefHexLen);
 
@@ -192,8 +192,9 @@ template ExtensionCheck2(maxKeyHexLen, maxNodeRefHexLen) {
     }
 
     // validity of RLP encoding
-    component rlp = RlpArrayCheckNoPrefix(maxExtensionRlpHexLen, 2, arrayPrefixMaxHexLen,
-                                          [0, 0], [maxKeyHexLen + 2, maxNodeRefHexLen]);
+    component rlp = RlpArrayCheck(maxExtensionRlpHexLen, 2, arrayPrefixMaxHexLen,
+                                  [0, 0],
+				  [maxKeyHexLen + 2, maxNodeRefHexLen]);
     for (var idx = 0; idx < maxExtensionRlpHexLen; idx++) {
         rlp.in[idx] <== nodeRlpHexs[idx];
     }
@@ -278,7 +279,7 @@ template ExtensionCheck2(maxKeyHexLen, maxNodeRefHexLen) {
     log(node_ref_len_match.out);	
 }
 
-template EmptyVtBranchCheck2(maxNodeRefHexLen) {
+template EmptyVtBranchCheck(maxNodeRefHexLen) {
     var maxBranchRlpHexLen = 1064;
     var BRANCH_BITS = 11;
     
@@ -302,7 +303,7 @@ template EmptyVtBranchCheck2(maxNodeRefHexLen) {
     signal output out;
     signal output outLen;
 
-    log(1111111000042);
+    log(111111100004);
     log(maxNodeRefHexLen);
     
     log(keyNibble);
@@ -327,9 +328,9 @@ template EmptyVtBranchCheck2(maxNodeRefHexLen) {
     }
 
     // check RLP validity
-    component rlp = RlpArrayCheckNoPrefix(maxBranchRlpHexLen, 17, 8,
-                                          [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-	                                  [64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 0]);
+    component rlp = RlpArrayCheck(maxBranchRlpHexLen, 17, 8,
+                                  [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+	                          [64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 0]);
     for (var idx = 0; idx < maxBranchRlpHexLen; idx++) {
         rlp.in[idx] <== nodeRlpHexs[idx];
     }
