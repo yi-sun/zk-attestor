@@ -174,11 +174,10 @@ def gen_proof_input(proof, root, key, value, maxValueHexLen, maxDepth=None, debu
 
             rlp_prefix = node[curr_idx: curr_idx + 2]
             curr_idx = curr_idx + 2
-            is_no_prefix = False
             if int(rlp_prefix, 16) <= int('7f', 16):
                 nodePathRlpLengthHexLen.append(0)
-                nodePathHexLen.append(0)
-                is_no_prefix = True
+                nodePathHexLen.append(2)
+                curr_idx = curr_idx - 2
             elif int(rlp_prefix, 16) <= int('b7', 16):
                 nodePathRlpLengthHexLen.append(0)
                 nodePathHexLen.append(2 * (int(rlp_prefix, 16) - int('80', 16)))
@@ -196,16 +195,16 @@ def gen_proof_input(proof, root, key, value, maxValueHexLen, maxDepth=None, debu
                 curr_idx = curr_idx + nodePathRlpLengthHexLen[-1]
                 nodePathHexLen.append(2 * int(str_len, 16))
 
-            if is_no_prefix:
-                nodePathPrefixHexLen.append(0)
-            else:
-                path_prefix_nibble = node[curr_idx]
-                if path_prefix_nibble == '0':
-                    curr_idx = curr_idx + 2
-                    nodePathPrefixHexLen.append(2)
-                elif path_prefix_nibble == '1':
-                    curr_idx = curr_idx + 1
-                    nodePathPrefixHexLen.append(1)
+            print('Extension: {} nodePathHexLen: {}'.format(node, nodePathHexLen))
+            print(node_decode.path)
+
+            path_prefix_nibble = node[curr_idx]
+            if path_prefix_nibble == '0':
+                curr_idx = curr_idx + 2
+                nodePathPrefixHexLen.append(2)
+            elif path_prefix_nibble == '1':
+                curr_idx = curr_idx + 1
+                nodePathPrefixHexLen.append(1)
             nodePathHexLen[-1] = nodePathHexLen[-1] - nodePathPrefixHexLen[-1]
             curr_idx = curr_idx + nodePathHexLen[-1]
             
@@ -313,96 +312,6 @@ def get_addr_pf(punk_pfs, max_depth=8, debug=False):
     return pf
 
 def get_block_pf(block, debug=False):
-    keys = [
-        'parentHash',
-        'sha3Uncles',              # ommersHash
-        'miner',                   # beneficiary
-        'stateRoot',
-        'transactionsRoot',
-        'receiptsRoot',
-        'logsBloom',
-        'difficulty',
-        'number',
-        'gasLimit',
-        'gasUsed',
-        'timestamp',
-        'extraData',
-        'mixHash',
-        'nonce',
-        'baseFeePerGas'
-    ]
-    
-    block_list = [
-        bytearray.fromhex(block['parentHash'][2:]),
-        bytearray.fromhex(block['sha3Uncles'][2:]),
-        bytearray.fromhex(block['miner'][2:]),
-        bytearray.fromhex(block['stateRoot'][2:]),
-        bytearray.fromhex(block['transactionsRoot'][2:]),
-        bytearray.fromhex(block['receiptsRoot'][2:]),
-        bytearray.fromhex(block['logsBloom'][2:]),
-        int(block['difficulty'], 16),
-        int(block['number'], 16),
-        int(block['gasLimit'], 16),
-        int(block['gasUsed'], 16),
-        int(block['timestamp'], 16),
-        bytearray.fromhex(block['extraData'][2:]),
-        bytearray.fromhex(block['mixHash'][2:]),
-        bytearray.fromhex(block['nonce'][2:]),
-        int(block['baseFeePerGas'], 16)
-    ]
-    rlp_block = rlp.encode(block_list).hex()
-    print(rlp_block, len(rlp_block))
-    print(keccak256(rlp_block))
-    print('Hash: ' + block['hash'])
-    print('Number: ' + block['number'])
-
-    rlp_prefix = rlp_block[:2]
-    rlp_prefix_hex_len = 2 + 2 * (int(rlp_prefix, 16) - int('f7', 16))
-
-    rlp_suffix = ''.join([rlp.encode(x).hex() for x in block_list[-8:]])
-    suffix_hex_len = len(rlp_suffix)
-
-    if args.debug:
-        print('rlp(block): {}'.format(rlp_block))
-        print('rlp_prefix: {}'.format(rlp_prefix))
-        print('rlp_suffix: {}'.format(rlp_suffix), len(rlp_suffix))
-    
-    ret = {
-        "rlpPrefixHexs": serialize_hex(rlp_block[:rlp_prefix_hex_len]),
-        "parentHashRlpHexs": serialize_hex(rlp.encode(block_list[0]).hex()),
-        "ommersHashRlpHexs": serialize_hex(rlp.encode(block_list[1]).hex()),
-        "beneficiaryRlpHexs": serialize_hex(rlp.encode(block_list[2]).hex()),
-        "stateRootRlpHexs": serialize_hex(rlp.encode(block_list[3]).hex()),
-        "transactionsRootRlpHexs": serialize_hex(rlp.encode(block_list[4]).hex()),
-        "receiptsRootRlpHexs": serialize_hex(rlp.encode(block_list[5]).hex()),
-        "logsBloomRlpHexs": serialize_hex(rlp.encode(block_list[6]).hex()),
-        "difficultyRlpHexs": serialize_hex(rlp.encode(block_list[7]).hex()),
-        "suffixRlpHexs": serialize_hex(rlp_suffix) + [0 for x in range(200 - suffix_hex_len)],
-
-        "suffixRlpHexLen": suffix_hex_len
-    }
-    return ret
-
-def get_block_pf2(block, debug=False):
-    keys = [
-        'parentHash',
-        'sha3Uncles',              # ommersHash
-        'miner',                   # beneficiary
-        'stateRoot',
-        'transactionsRoot',
-        'receiptsRoot',
-        'logsBloom',
-        'difficulty',
-        'number',
-        'gasLimit',
-        'gasUsed',
-        'timestamp',
-        'extraData',
-        'mixHash',
-        'nonce',
-        'baseFeePerGas'
-    ]
-    
     block_list = [
         bytearray.fromhex(block['parentHash'][2:]),
         bytearray.fromhex(block['sha3Uncles'][2:]),
@@ -428,10 +337,9 @@ def get_block_pf2(block, debug=False):
     print('Number: ' + block['number'])
     for x in block_list:
         print(len(rlp.encode(x).hex()), x)
-    rlp_prefix = rlp_block[:2]
-    rlp_prefix_hex_len = 2 + 2 * (int(rlp_prefix, 16) - int('f7', 16))
 
     if args.debug:
+        rlp_prefix = rlp_block[:2]
         print('rlp(block): {}'.format(rlp_block))
         print('rlp_prefix: {}'.format(rlp_prefix))
     
@@ -455,77 +363,11 @@ def get_addr_storage_pf(block, pfs, slot, addr_max_depth, storage_max_depth, deb
     for k in block_pf:
         ret[k] = block_pf[k]
 
-    ret['address'] = serialize_int(pfs['result']['address'][2:])
-    ret['nonceHexLen'] = len(pfs['result']['nonce'][2:])
-    ret['balanceHexLen'] = len(pfs['result']['balance'][2:])
-    ret['addressValueRlpHexs'] = addr_pf['valueHexs']
-    for k in [
-            'leafRlpLengthHexLen',
-            'leafPathRlpLengthHexLen',
-            'leafPathPrefixHexLen',
-            'leafPathHexLen',
-            'leafValueRlpLengthHexLen',
-            'leafValueHexLen',
-            'leafRlpHexs',
-            'nodeRlpLengthHexLen',
-            'nodePathRlpLengthHexLen',
-            'nodePathPrefixHexLen',
-            'nodePathHexLen',
-            'nodeRefHexLen',
-            'nodeRlpHexs',
-            'nodeTypes',
-            'depth']:
-        new_key = 'address{}'.format(k[0].upper() + k[1:])
-        ret[new_key] = addr_pf[k]
-
-    ret['slot'] = serialize_int2(slot)
-    ret['slotValueRlpHexs'] = storage_pf['valueHexs']
-    for k in ['leafRlpLengthHexLen',
-              'leafPathRlpLengthHexLen',
-              'leafPathPrefixHexLen',
-              'leafPathHexLen',
-              'leafValueRlpLengthHexLen',
-              'leafValueHexLen',
-              'leafRlpHexs',
-              'nodeRlpLengthHexLen',
-              'nodePathRlpLengthHexLen',
-              'nodePathPrefixHexLen',
-              'nodePathHexLen',
-              'nodeRefHexLen',
-              'nodeRlpHexs',
-              'nodeTypes',
-              'depth']:
-        new_key = 'storage{}'.format(k[0].upper() + k[1:])
-        ret[new_key] = storage_pf[k]
-        
-    return ret
-
-def get_addr_storage2_pf(block, pfs, slot, addr_max_depth, storage_max_depth, debug=False):
-    block_pf = get_block_pf2(block, debug=debug)
-    addr_pf = get_addr_pf(pfs, max_depth=addr_max_depth, debug=debug)
-    storage_pf = get_storage_pf(pfs, slot=slot, max_depth=storage_max_depth, debug=debug)
-
-    if args.debug:
-        print(block_pf.keys())
-        print(addr_pf.keys())
-        print(storage_pf.keys())
-
-    ret = {}
-    ret['blockHash'] = serialize_int2(block['hash'][2:])
-    for k in block_pf:
-        ret[k] = block_pf[k]
-
     print('Address: ' + pfs['result']['address'][2:])        
     ret['address'] = serialize_int(pfs['result']['address'][2:])
     ret['addressValueRlpHexs'] = addr_pf['valueHexs']
-    for k in [
-#            'leafRlpLengthHexLen',
-#              'leafPathRlpLengthHexLen',
-              'leafPathPrefixHexLen',
-#              'leafValueRlpLengthHexLen',
+    for k in ['leafPathPrefixHexLen',
               'leafRlpHexs',
-#              'nodeRlpLengthHexLen',
-#              'nodePathRlpLengthHexLen',
               'nodePathPrefixHexLen',
               'nodeRlpHexs',
               'nodeTypes',
@@ -549,14 +391,8 @@ def get_addr_storage2_pf(block, pfs, slot, addr_max_depth, storage_max_depth, de
 
     ret['slot'] = serialize_int2(slot)
     ret['slotValueRlpHexs'] = storage_pf['valueHexs']
-    for k in [
-#            'leafRlpLengthHexLen',
-#              'leafPathRlpLengthHexLen',
-              'leafPathPrefixHexLen',
-#              'leafValueRlpLengthHexLen',
+    for k in ['leafPathPrefixHexLen',
               'leafRlpHexs',
-#              'nodeRlpLengthHexLen',
-#              'nodePathRlpLengthHexLen',
               'nodePathPrefixHexLen',
               'nodeRlpHexs',
               'nodeTypes',
@@ -594,14 +430,8 @@ parser.add_argument('--punk_slot', type=int, default=0)
 parser.add_argument('--eth_block_hash', action='store_true', default=False)
 parser.add_argument('--eth_block_hash_file_str', type=str, default='inputs/input_eth_block_hash.json')
 
-parser.add_argument('--eth_block_hash2', action='store_true', default=False)
-parser.add_argument('--eth_block_hash2_file_str', type=str, default='inputs/input_eth_block_hash2.json')
-
 parser.add_argument('--eth_addr_storage', action='store_true', default=False)
 parser.add_argument('--eth_addr_storage_file_str', type=str, default='inputs/input_addr_storage.json')
-
-parser.add_argument('--eth_addr_storage2', action='store_true', default=False)
-parser.add_argument('--eth_addr_storage2_file_str', type=str, default='inputs/input_addr_storage2.json')
 
 args = parser.parse_args()
 
@@ -616,12 +446,6 @@ def main():
         block_pf = get_block_pf(punk_block, debug=args.debug)
         block_str = pprint.pformat(block_pf, width=100, compact=True).replace("'", '"')
         with open(args.eth_block_hash_file_str, 'w') as f:
-            f.write(block_str)
-
-    if args.eth_block_hash2:
-        block_pf = get_block_pf2(punk_block, debug=args.debug)
-        block_str = pprint.pformat(block_pf, width=100, compact=True).replace("'", '"')
-        with open(args.eth_block_hash2_file_str, 'w') as f:
             f.write(block_str)
             
     if args.addr:
@@ -684,27 +508,6 @@ def main():
         eth_addr_storage_str = pprint.pformat(eth_addr_storage_pf, width=100, compact=True).replace("'", '"')
         with open(args.eth_addr_storage_file_str, 'w') as f:
             f.write(eth_addr_storage_str)
-
-    if args.eth_addr_storage2:
-        if args.slot < 10:
-            x = hex(args.slot)[2:]
-            x = ''.join(['0' for idx in range(64 - len(x))]) + x
-            slot = x
-        else:
-            x = hex(args.punk_slot)[2:]
-            x = ''.join(['0' for idx in range(64 - len(x))]) + x
-            y = hex(10)[2:]
-            y = ''.join(['0' for idx in range(64 - len(y))]) + y
-            x = x + y
-            slot = keccak256(x)
-
-        eth_addr_storage2_pf = get_addr_storage2_pf(punk_block, punk_pfs, slot,
-                                                    args.addr_max_depth,
-                                                    args.storage_max_depth,
-                                                    debug=args.debug)
-        eth_addr_storage2_str = pprint.pformat(eth_addr_storage2_pf, width=100, compact=True).replace("'", '"')
-        with open(args.eth_addr_storage2_file_str, 'w') as f:
-            f.write(eth_addr_storage2_str)
 
 if __name__ == '__main__':
     main()

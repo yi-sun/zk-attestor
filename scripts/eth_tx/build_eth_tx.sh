@@ -29,7 +29,7 @@ start=`date +%s`
 set -x
 cd "$BUILD_DIR"/"$CIRCUIT_NAME"_cpp 
 make
-./"$CIRCUIT_NAME" ../../../scripts/input_gen/inputs/input_tx2_proof.json ../witness.wtns > ../log.out
+./"$CIRCUIT_NAME" ../../../scripts/input_gen/inputs/input_tx_proof.json ../witness.wtns > ../log.out
 cd ../../../scripts/"$CIRCUIT_NAME"
 end=`date +%s`
 echo "DONE ($((end-start))s)"

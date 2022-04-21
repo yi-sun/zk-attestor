@@ -425,76 +425,7 @@ def get_tx_rlp(tx):
     else:
         print('type not handled: {}'.format(tx['type']))
 
-def get_pf(block, tx_idx, max_depth=None, max_key_len=64, max_val_len=234, debug=False):
-    block = block['result']
-    block_hash = block['hash']
-
-    header = [
-        bytearray.fromhex(block['parentHash'][2:]),
-        bytearray.fromhex(block['sha3Uncles'][2:]),
-        bytearray.fromhex(block['miner'][2:]),
-        bytearray.fromhex(block['stateRoot'][2:]),
-        bytearray.fromhex(block['transactionsRoot'][2:]),
-        bytearray.fromhex(block['receiptsRoot'][2:]),
-        bytearray.fromhex(block['logsBloom'][2:]),
-        int(block['difficulty'], 0),
-        int(block['number'], 0),
-        int(block['gasLimit'], 0),
-        int(block['gasUsed'], 0),
-        int(block['timestamp'], 0),
-        bytearray.fromhex(block['extraData'][2:]),
-        bytearray.fromhex(block['mixHash'][2:]),
-        bytearray.fromhex(block['nonce'][2:]),
-        int(block['baseFeePerGas'], 0),
-    ]
-
-    tx_list = block['transactions']
-    raw_tx_dict = {}
-    if debug:
-        print('{} tx in block'.format(len(tx_list)))
-    for idx, tx in enumerate(tx_list):
-        if tx['type'] == '0x0':
-            raw_tx = get_raw_tx(tx)
-            raw_tx_dict[rlp.encode(idx)] = rlp.encode(raw_tx)
-        elif tx['type'] == '0x2':
-            raw_tx = get_raw_tx(tx)
-            raw_tx_dict[rlp.encode(idx)] = bytearray.fromhex('02') + rlp.encode(raw_tx)        
-        else:
-            print('type not handled: {}'.format(tx['type']))
-        if debug:
-            print(idx, rlp.encode(idx).hex(), tx['type'], tx['hash'], len(rlp.encode(raw_tx).hex()))
-
-    trie, storage = construct_mpt(raw_tx_dict)
-    
-    root = mpt.node.Node.decode(storage[trie._root])
-    path = mpt.nibble_path.NibblePath(rlp.encode(tx_idx))
-    
-    pf = get_mpt_proof(storage, [], root, path)
-    value = trie.get(rlp.encode(tx_idx)).hex()
-
-    ret = gen_proof_input(pf, keccak256(root.encode().hex()), rlp.encode(tx_idx).hex(), value, max_depth, max_key_len, max_val_len, debug=debug)
-    return ret
-
-def get_block_pf2(block, debug=False):
-    keys = [
-        'parentHash',
-        'sha3Uncles',              # ommersHash
-        'miner',                   # beneficiary
-        'stateRoot',
-        'transactionsRoot',
-        'receiptsRoot',
-        'logsBloom',
-        'difficulty',
-        'number',
-        'gasLimit',
-        'gasUsed',
-        'timestamp',
-        'extraData',
-        'mixHash',
-        'nonce',
-        'baseFeePerGas'
-    ]
-    
+def get_block_pf(block, debug=False):    
     block_list = [
         bytearray.fromhex(block['parentHash'][2:]),
         bytearray.fromhex(block['sha3Uncles'][2:]),
@@ -531,10 +462,41 @@ def get_block_pf2(block, debug=False):
         "blockRlpHexs": serialize_hex(rlp_block) + [0 for x in range(1112 - len(rlp_block))],
     }
     return ret
+        
+def get_tx_pf(block, tx_idx, max_depth=None, max_key_len=64, max_val_len=234, debug=False):
+    block = block['result']
+    block_hash = block['hash']
 
-def get_pf2(block, tx_idx, max_depth=None, max_key_len=64, max_val_len=234, debug=False):
-    block_pf = get_block_pf2(block['result'], debug=debug)
-    tx_pf = get_pf(block, tx_idx, max_depth=max_depth, max_key_len=max_key_len, max_val_len=max_val_len, debug=debug)
+    tx_list = block['transactions']
+    raw_tx_dict = {}
+    if debug:
+        print('{} tx in block'.format(len(tx_list)))
+    for idx, tx in enumerate(tx_list):
+        if tx['type'] == '0x0':
+            raw_tx = get_raw_tx(tx)
+            raw_tx_dict[rlp.encode(idx)] = rlp.encode(raw_tx)
+        elif tx['type'] == '0x2':
+            raw_tx = get_raw_tx(tx)
+            raw_tx_dict[rlp.encode(idx)] = bytearray.fromhex('02') + rlp.encode(raw_tx)        
+        else:
+            print('type not handled: {}'.format(tx['type']))
+        if debug:
+            print(idx, rlp.encode(idx).hex(), tx['type'], tx['hash'], len(rlp.encode(raw_tx).hex()))
+
+    trie, storage = construct_mpt(raw_tx_dict)
+    
+    root = mpt.node.Node.decode(storage[trie._root])
+    path = mpt.nibble_path.NibblePath(rlp.encode(tx_idx))
+    
+    pf = get_mpt_proof(storage, [], root, path)
+    value = trie.get(rlp.encode(tx_idx)).hex()
+
+    ret = gen_proof_input(pf, keccak256(root.encode().hex()), rlp.encode(tx_idx).hex(), value, max_depth, max_key_len, max_val_len, debug=debug)
+    return ret
+
+def get_pf(block, tx_idx, max_depth=None, max_key_len=64, max_val_len=234, debug=False):
+    block_pf = get_block_pf(block['result'], debug=debug)
+    tx_pf = get_tx_pf(block, tx_idx, max_depth=max_depth, max_key_len=max_key_len, max_val_len=max_val_len, debug=debug)
 
     ret = {}
     ret['blockHash'] = serialize_int2(block['result']['hash'][2:])
@@ -567,15 +529,13 @@ def get_pf2(block, tx_idx, max_depth=None, max_key_len=64, max_val_len=234, debu
     ret['txRlpHexs'] = serialize_hex(tx_rlp.hex()) + [0 for idx in range(max_val_len - len(tx_rlp.hex()))]
     return ret
 
-
 parser = argparse.ArgumentParser()
 parser.add_argument('--debug', action='store_true', default=False)
 parser.add_argument('--tx_idx', type=int, default=2)
 parser.add_argument('--file_str', type=str, default='inputs/input_tx_proof.json')
-parser.add_argument('--file_str2', type=str, default='inputs/input_tx2_proof.json')
-parser.add_argument('--max_depth', type=int, default=5)
+parser.add_argument('--max_depth', type=int, default=6)
 parser.add_argument('--max_key_len', type=int, default=6)
-parser.add_argument('--max_val_len', type=int, default=234)
+parser.add_argument('--max_val_len', type=int, default=15000)
 args = parser.parse_args()
 
 def main():
@@ -583,21 +543,16 @@ def main():
         block = json.loads(f.read())
 
     pf = get_pf(block, args.tx_idx, max_depth=args.max_depth, max_key_len=args.max_key_len, max_val_len=args.max_val_len, debug=args.debug)
-    print('tx_idx: {:3} depth: {:3} key_len: {:6} val_len: {:5}'.format(args.tx_idx, pf['depth'], len(rlp.encode(args.tx_idx).hex()), len(get_tx_rlp(block['result']['transactions'][args.tx_idx]).hex())))
-    print(block['result']['transactions'][args.tx_idx]['type'],
-          block['result']['transactions'][args.tx_idx]['nonce'],
-          get_tx_rlp(block['result']['transactions'][args.tx_idx]).hex())
-          
     pf_str = pprint.pformat(pf, width=100, compact=True).replace("'", '"')
     with open(args.file_str, 'w') as f:
         f.write(pf_str)
 
-    pf2 = get_pf2(block, args.tx_idx, max_depth=args.max_depth, max_key_len=args.max_key_len, max_val_len=args.max_val_len, debug=args.debug)
-    pf2_str = pprint.pformat(pf2, width=100, compact=True).replace("'", '"')
-    with open(args.file_str2, 'w') as f:
-        f.write(pf2_str)
-                    
     if args.debug:
+        print('tx_idx: {:3} depth: {:3} key_len: {:6} val_len: {:5}'.format(args.tx_idx, pf['depth'], len(rlp.encode(args.tx_idx).hex()), len(get_tx_rlp(block['result']['transactions'][args.tx_idx]).hex())))
+        print(block['result']['transactions'][args.tx_idx]['type'],
+              block['result']['transactions'][args.tx_idx]['nonce'],
+              get_tx_rlp(block['result']['transactions'][args.tx_idx]).hex())
+        
         print(pf_str)
         for k in pf:
             if type(pf[k]) is not int and type(pf[k][0]) is not int:
