@@ -611,7 +611,7 @@ template EthTransactionProof(maxDepth, maxIndex, maxTxRlpHexLen) {
     methodId <== isCall * temp;
 }
 
-template EthAddressStorageProof(addressMaxDepth, storageMaxDepth) {
+template EthAcctStorageProof(acctMaxDepth, storageMaxDepth) {
     // 128 bits = big endian expression of hexes
     signal input blockHash[2];    // 128 bit coordinates
     signal input address;         // 160 bits

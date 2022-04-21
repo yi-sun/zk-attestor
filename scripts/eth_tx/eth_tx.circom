@@ -4,4 +4,4 @@ include "../../circuits/eth.circom";
 			
 component main {public [blockHash,
 			index
-		       ]} = EthTransactionProof(6, 500, 500);
+		       ]} = EthTransactionProof(6, 500, 15000);
