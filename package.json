@@ -1,18 +1,16 @@
 {
-    "name": "eth-attestor",
+    "name": "zk-attestor",
     "version": "0.0.1",
     "description": "Attestations to Ethereum data in circom",
     "main": "index.js",
     "scripts": {
-        "build": "./build_circuits.sh",
-        "build:storage": "cd ./scripts/storage_proof && ./build_storage_proof.sh",
-        "build:address": "cd ./scripts/address_proof && ./build_address_proof.sh",
+        "build:eth_addr_storage": "cd ./scripts/eth_addr_storage && ./build_eth_addr_storage.sh",
+        "build:eth_tx_proof": "cd ./scripts/eth_tx && ./build_eth_tx.sh",
         "build:eth_block_hash": "cd ./scripts/eth_block_hash && ./build_eth_block_hash.sh",
-        "build:tx": "cd ./scripts/tx_proof && ./build_tx_proof.sh",
         "test": "NODE_OPTIONS='--max-old-space-size=56000' mocha -r ts-node/register 'test/**/*.ts'",
 	"test:hardhat": "hardhat test"
     },
-    "repository": "git@github.com:yi-sun/eth-attestor.git",
+    "repository": "git@github.com:yi-sun/zk-attestor.git",
     "author": "Yi Sun <yi-sun@users.noreply.github.com>",
     "dependencies": {
         "circomlib": "^2.0.2",
